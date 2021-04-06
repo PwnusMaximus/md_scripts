@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# This file is an alternative to the "count_frames" script and instead outputs the total sum of frames of all trajectory files
+# in a directoy 
+# this command used the cpptraj -tl command 
+# it takes matching prmtop and trajectory (nc, mdcrd) files as input 
+# note, that the number of frames does not correlate directly to simulation time unless the user
+# knows the -ntwx and the -ntstep values from the pmemd 'in' file
+
+
+PT=$(ls -t *prmtop | head -n 1)
+COUNT=0
+echo "Using $PT as the prmtop"
+echo "this may take a moment... please be patient" 
+for file in $(ls -v *.{nc,mdcrd} 2> /dev/null)
+do echo $(cpptraj -p "$PT" -y "$file" -tl | grep -o "[0-9]\+") >> sum.txt
+	((COUNT=COUNT+1))
+	echo "loop $COUNT"
+done
+	awk ' { SUM += $0} END { print SUM " <- Total frames over all '$COUNT' simulations" }' sum.txt
+rm sum.txt 
