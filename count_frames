@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# This file takes matching prmtop and trajectory (nc, mdcrd) files as input and runs the cpptraj -tl command on each trajectory 
+# to show the user the number of frames contained in each traj file.
+# note, that the number of frames does not correlate directly to simulation time unless the user
+# knows the -ntwx and the -ntstep values from the pmemd 'in' file
+
+PT=$(ls -t *prmtop | head -n 1)
+echo "Using $PT as the prmtop"
+for file in $(ls -v *.{nc,mdcrd} 2> /dev/null)
+do echo "Trajctory $file has $(cpptraj -p "$PT" -y "$file" -tl | grep -o "[0-9]\+") Frames."
+done
