@@ -1,0 +1,24 @@
+source leaprc.protein.ff14SB
+source leaprc.water.tip4pew
+source leaprc.DNA.OL15
+loadamberparams frcmod.ionsjc_tip4pew
+loadamberparams frcmod.tip4pew
+loadamberparams frcmod.DNA.OL15
+loadamberparams frcmod.ff14SB
+loadamberparams t5k.frcmod
+loadoff t5k.lib
+loadamberparams t5w.frcmod
+loadoff t5w.lib
+model= loadpdb 6eo6-dna-pro.pdb
+check model
+savepdb model TBA_fixed.pdb
+
+solvateoct model TIP4PEWBOX 10.0
+saveamberparm model TBA_wat.prmtop TBA_wat.inpcrd
+savepdb model TBA_wat.pdb
+
+addions model Na+ 31
+addions model Cl- 22
+saveamberparm model TBA_wat_ions.prmtop TBA_wat_ions.inpcrd
+savepdb model TBA_wat_ions.pdb
+quit
