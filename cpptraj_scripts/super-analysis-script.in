@@ -1,0 +1,357 @@
+#######################################################################
+#######################################################################
+##loading in the prmtop and naming the trajectories for loadtraj analysis
+parm TBA_wat_ions_stripped.prmtop
+loadtraj name TRAJ01   *rep1.nc
+loadtraj name TRAJ02   *rep2.nc
+loadtraj name TRAJ03   *rep3.nc
+loadtraj name ALL-TRAJ TBA_wat_ions_stripped_rep_all.nc
+
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+## Calculate global relative movement of the thrombin relative to TBA
+##CALCULATE THE DISTANCE between K and the COM of thrombin##
+##General NOTES about the TBA / Thrombin System
+##central residue that is highly stable in thrombin
+##:VAL68 
+##upper guanine numbers
+##11 14 2 5 
+##downer guanine residues
+##10 15 1 6
+##Atoms in guanine purine
+##N1 C2 N3 C4 C5 C6 N7 C8 N9
+
+#Distance between K of TBA and center of mass of thrombin
+crdaction ALL-TRAJ distance DIST_K_2_PRO_ALL :K :17-311 out gq-pro-relative-movement/k-2-pro-all-dist.dat 
+crdaction TRAJ01 distance DIST_K_2_PRO_TRAJ1 :K :17-311 out gq-pro-relative-movement/k-2-pro-traj1-dist.dat 
+crdaction TRAJ02 distance DIST_K_2_PRO_TRAJ2 :K :17-311 out gq-pro-relative-movement/k-2-pro-traj2-dist.dat 
+crdaction TRAJ03 distance DIST_K_2_PRO_TRAJ3 :K :17-311 out gq-pro-relative-movement/k-2-pro-traj3-dist.dat 
+##/DONE/ CALCULATE THE DISTANCE between K and the COM of thrombin##
+
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+##ALL Trajectories combined
+##CALCULATE THE ANGLE FROM THE Normal of the GQ plane to a central residue in Thrombin##
+#generate vectors##
+#Perdendicular vectors formed from the top GQ plane
+crdaction ALL-TRAJ vector GQ_VECT_UP out gq-pro-relative-movement/gq-up-vec-2-pro-com.dat :11,14,2,5,@N1,C2,N3,C4,C5,C6,N7,C8,N9 corrplane
+crdaction ALL-TRAJ vector GQ_VECT_DWN out gq-pro-relative-movement/gq-dwn-vec-2-pro-com.dat :10,15,1,6,@N1,C2,N3,C4,C5,C6,N7,C8,N9 corrplane
+#generate vectors from the GQ planes to the a central residue (VAL68)
+# remember, these commands produce TWO datasets. One with the vector and one with the magnitude <name> and <name>[Mag]
+crdaction ALL-TRAJ vector GQ_UP_2_VAL68  :11,14,2,5,@O6 :68(&!@H=) out gq-pro-relative-movement/gq-up-2-val68-mag.dat magnitude
+crdaction ALL-TRAJ vector GQ_DWN_2_VAL68 :10,15,1,6,@O6 :68(&!@H=) out gq-pro-relative-movement/gq-dwn-2-val68-mag.dat magnitude
+go # execute vector operations and write files
+#calculate the dotangle between corrplane and gq-2-val68 vectors
+vectormath vec1 GQ_VECT_UP vec2  GQ_UP_2_VAL68 dotangle out gq-pro-relative-movement/gq-up-2-val68-dotangle.dat name GQ_UP_2_VAL68_DOTANG
+vectormath vec1 GQ_VECT_DWN vec2  GQ_DWN_2_VAL68 dotangle out gq-pro-relative-movement/gq-dwn-2-val68-dotangle.dat name GQ_DWN_2_VAL68_DOTANG
+go
+# Calculate the distance from the 'pole' to the VAL68 Residue 
+# Remember, "CALC" Hates!!!! hyphens "-". use underscores "_"
+# Remember the sin function uses Radians, convert DEG to RAD in-line with ( DEG * PI ) / 180 = RAD
+calc GQ_UP_POLE_DANCE_R = sin( (GQ_UP_2_VAL68_DOTANG * PI) / 180 ) * GQ_UP_2_VAL68[Mag]
+writedata gq-pro-relative-movement/gq-up-pole-dance-distance.dat GQ_UP_POLE_DANCE_R
+##/DONE/# CALCULATE THE ANGLE FROM THE Normal of the GQ plane to a central residue in Thrombin##
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+##CALCULATE THE TWIST of the GQ PLANE Relative to a perpendicular alpha dihedral on thrombin##
+crdaction ALL-TRAJ vector GQ_UP_DIAGONAL :14@C1' :5@C1'  out gq-pro-relative-movement/gq-up-diag-vect.dat 
+crdaction ALL-TRAJ vector PRO_PERP_ALPHA :297@CA :308@N  out gq-pro-relative-movement/pro-alpha-vect.dat 
+vectormath vec1 GQ_UP_DIAGONAL vec2 PRO_PERP_ALPHA dotangle out gq-pro-relative-movement/gq-plane-2-alpha-twist-angle.dat name GQ_PLANE_TWIST
+##/DONE/ ##CALCULATE THE TWIST of the GQ PLANE Relative to a perpendicular alpha dihedral on thrombin##
+go
+
+##TRAJ01 Trajectories
+##CALCULATE THE ANGLE FROM THE Normal of the GQ plane to a central residue in Thrombin##
+#generate vectors##
+#Perdendicular vectors formed from the top GQ plane
+crdaction TRAJ01 vector TRAJ01_GQ_VECT_UP  out gq-pro-relative-movement/traj01-gq-up-vec-2-pro-com.dat  :11,14,2,5,@N1,C2,N3,C4,C5,C6,N7,C8,N9 corrplane
+crdaction TRAJ01 vector TRAJ01_GQ_VECT_DWN out gq-pro-relative-movement/traj01-gq-dwn-vec-2-pro-com.dat :10,15,1,6,@N1,C2,N3,C4,C5,C6,N7,C8,N9 corrplane
+#generate vectors from the GQ planes to the a central residue (VAL68)
+# remember, these commands produce TWO datasets. One with the vector and one with the magnitude <name> and <name>[Mag]
+crdaction TRAJ01 vector TRAJ01_GQ_UP_2_VAL68  :11,14,2,5,@O6 :68(&!@H=) out gq-pro-relative-movement/traj01-gq-up-2-val68-mag.dat magnitude
+crdaction TRAJ01 vector TRAJ01_GQ_DWN_2_VAL68 :10,15,1,6,@O6 :68(&!@H=) out gq-pro-relative-movement/traj01-gq-dwn-2-val68-mag.dat magnitude
+go # execute vector operations and write files
+#calculate the dotangle between corrplane and gq-2-val68 vectors
+vectormath vec1 TRAJ01_GQ_VECT_UP vec2   TRAJ01_GQ_UP_2_VAL68  dotangle out gq-pro-relative-movement/traj01-gq-up-2-val68-dotangle.dat  name TRAJ01_GQ_UP_2_VAL68_DOTANG
+vectormath vec1 TRAJ01_GQ_VECT_DWN vec2  TRAJ01_GQ_DWN_2_VAL68 dotangle out gq-pro-relative-movement/traj01-gq-dwn-2-val68-dotangle.dat name TRAJ01_GQ_DWN_2_VAL68_DOTANG
+go
+# Calculate the distance from the 'pole' to the VAL68 Residue 
+# Remember, "CALC" Hates!!!! hyphens "-". use underscores "_"
+# Remember the sin function uses Radians, convert DEG to RAD in-line with ( DEG * PI ) / 180 = RAD
+calc TRAJ01_GQ_UP_POLE_DANCE_R = sin( (GQ_UP_2_VAL68_DOTANG * PI) / 180 ) * GQ_UP_2_VAL68[Mag]
+writedata gq-pro-relative-movement/traj01-gq-up-pole-dance-distance.dat GQ_UP_POLE_DANCE_R
+##/DONE/# CALCULATE THE ANGLE FROM THE Normal of the GQ plane to a central residue in Thrombin##
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+##CALCULATE THE TWIST of the GQ PLANE Relative to a perpendicular alpha dihedral on thrombin##
+crdaction TRAJ01 vector TRAJ01_GQ_UP_DIAGONAL :14@C1' :5@C1'  out gq-pro-relative-movement/traj01-gq-up-diag-vect.dat 
+crdaction TRAJ01 vector TRAJ01_PRO_PERP_ALPHA :297@CA :308@N  out gq-pro-relative-movement/traj01-pro-alpha-vect.dat 
+vectormath vec1 TRAJ01_GQ_UP_DIAGONAL vec2 TRAJ01-PRO_PERP_ALPHA dotangle out gq-pro-relative-movement/traj01-gq-plane-2-alpha-twist-angle.dat name TRAJ01_GQ_PLANE_TWIST
+##/DONE/ ##CALCULATE THE TWIST of the GQ PLANE Relative to a perpendicular alpha dihedral on thrombin##
+go
+
+##TRAJ02 Trajectories
+##CALCULATE THE ANGLE FROM THE Normal of the GQ plane to a central residue in Thrombin##
+#generate vectors##
+#Perdendicular vectors formed from the top GQ plane
+crdaction TRAJ02 vector TRAJ02_GQ_VECT_UP  out gq-pro-relative-movement/traj02-gq-up-vec-2-pro-com.dat  :11,14,2,5,@N1,C2,N3,C4,C5,C6,N7,C8,N9 corrplane
+crdaction TRAJ02 vector TRAJ02_GQ_VECT_DWN out gq-pro-relative-movement/traj02-gq-dwn-vec-2-pro-com.dat :10,15,1,6,@N1,C2,N3,C4,C5,C6,N7,C8,N9 corrplane
+#generate vectors from the GQ planes to the a central residue (VAL68)
+# remember, these commands produce TWO datasets. One with the vector and one with the magnitude <name> and <name>[Mag]
+crdaction TRAJ02 vector TRAJ02_GQ_UP_2_VAL68  :11,14,2,5,@O6 :68(&!@H=) out gq-pro-relative-movement/traj02-gq-up-2-val68-mag.dat magnitude
+crdaction TRAJ02 vector TRAJ02_GQ_DWN_2_VAL68 :10,15,1,6,@O6 :68(&!@H=) out gq-pro-relative-movement/traj02-gq-dwn-2-val68-mag.dat magnitude
+go # execute vector operations and write files
+#calculate the dotangle between corrplane and gq-2-val68 vectors
+vectormath vec1 TRAJ02_GQ_VECT_UP vec2   TRAJ02_GQ_UP_2_VAL68  dotangle out gq-pro-relative-movement/traj02-gq-up-2-val68-dotangle.dat  name TRAJ02_GQ_UP_2_VAL68_DOTANG
+vectormath vec1 TRAJ02_GQ_VECT_DWN vec2  TRAJ02_GQ_DWN_2_VAL68 dotangle out gq-pro-relative-movement/traj02-gq-dwn-2-val68-dotangle.dat name TRAJ02_GQ_DWN_2_VAL68_DOTANG
+go
+# Calculate the distance from the 'pole' to the VAL68 Residue 
+# Remember, "CALC" Hates!!!! hyphens "-". use underscores "_"
+# Remember the sin function uses Radians, convert DEG to RAD in-line with ( DEG * PI ) / 180 = RAD
+calc TRAJ02_GQ_UP_POLE_DANCE_R = sin( (GQ_UP_2_VAL68_DOTANG * PI) / 180 ) * GQ_UP_2_VAL68[Mag]
+writedata gq-pro-relative-movement/traj03-gq-up-pole-dance-distance.dat GQ_UP_POLE_DANCE_R
+##/DONE/# CALCULATE THE ANGLE FROM THE Normal of the GQ plane to a central residue in Thrombin##
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+##CALCULATE THE TWIST of the GQ PLANE Relative to a perpendicular alpha dihedral on thrombin##
+crdaction TRAJ02 vector TRAJ02_GQ_UP_DIAGONAL :14@C1' :5@C1'  out gq-pro-relative-movement/traj03-gq-up-diag-vect.dat 
+crdaction TRAJ02 vector TRAJ02_PRO_PERP_ALPHA :297@CA :308@N  out gq-pro-relative-movement/traj03-pro-alpha-vect.dat 
+vectormath vec1 TRAJ02_GQ_UP_DIAGONAL vec2 TRAJ02-PRO_PERP_ALPHA dotangle out gq-pro-relative-movement/traj03-gq-plane-2-alpha-twist-angle.dat name TRAJ02_GQ_PLANE_TWIST
+##/DONE/ ##CALCULATE THE TWIST of the GQ PLANE Relative to a perpendicular alpha dihedral on thrombin##
+go
+
+##TRAJ03 Trajectories
+##CALCULATE THE ANGLE FROM THE Normal of the GQ plane to a central residue in Thrombin##
+#generate vectors##
+#Perdendicular vectors formed from the top GQ plane
+crdaction TRAJ03 vector TRAJ03_GQ_VECT_UP  out gq-pro-relative-movement/traj03-gq-up-vec-2-pro-com.dat  :11,14,2,5,@N1,C2,N3,C4,C5,C6,N7,C8,N9 corrplane
+crdaction TRAJ03 vector TRAJ03_GQ_VECT_DWN out gq-pro-relative-movement/traj03-gq-dwn-vec-2-pro-com.dat :10,15,1,6,@N1,C2,N3,C4,C5,C6,N7,C8,N9 corrplane
+#generate vectors from the GQ planes to the a central residue (VAL68)
+# remember, these commands produce TWO datasets. One with the vector and one with the magnitude <name> and <name>[Mag]
+crdaction TRAJ03 vector TRAJ03_GQ_UP_2_VAL68  :11,14,2,5,@O6 :68(&!@H=) out gq-pro-relative-movement/traj03-gq-up-2-val68-mag.dat magnitude
+crdaction TRAJ03 vector TRAJ03_GQ_DWN_2_VAL68 :10,15,1,6,@O6 :68(&!@H=) out gq-pro-relative-movement/traj03-gq-dwn-2-val68-mag.dat magnitude
+go # execute vector operations and write files
+#calculate the dotangle between corrplane and gq-2-val68 vectors
+vectormath vec1 TRAJ03_GQ_VECT_UP  vec2  TRAJ03_GQ_UP_2_VAL68  dotangle out gq-pro-relative-movement/traj03-gq-up-2-val68-dotangle.dat  name TRAJ03_GQ_UP_2_VAL68_DOTANG
+vectormath vec1 TRAJ03_GQ_VECT_DWN vec2  TRAJ03_GQ_DWN_2_VAL68 dotangle out gq-pro-relative-movement/traj03-gq-dwn-2-val68-dotangle.dat name TRAJ03_GQ_DWN_2_VAL68_DOTANG
+go
+# Calculate the distance from the 'pole' to the VAL68 Residue 
+# Remember, "CALC" Hates!!!! hyphens "-". use underscores "_"
+# Remember the sin function uses Radians, convert DEG to RAD in-line with ( DEG * PI ) / 180 = RAD
+calc TRAJ03_GQ_UP_POLE_DANCE_R = sin( (GQ_UP_2_VAL68_DOTANG * PI) / 180 ) * GQ_UP_2_VAL68[Mag]
+writedata gq-pro-relative-movement/traj03-gq-up-pole-dance-distance.dat GQ_UP_POLE_DANCE_R
+##/DONE/# CALCULATE THE ANGLE FROM THE Normal of the GQ plane to a central residue in Thrombin##
+#>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+##CALCULATE THE TWIST of the GQ PLANE Relative to a perpendicular alpha dihedral on thrombin##
+crdaction TRAJ03 vector TRAJ03_GQ_UP_DIAGONAL :14@C1' :5@C1'  out gq-pro-relative-movement/traj03-gq-up-diag-vect.dat 
+crdaction TRAJ03 vector TRAJ03_PRO_PERP_ALPHA :297@CA :308@N  out gq-pro-relative-movement/traj03-pro-alpha-vect.dat 
+vectormath vec1 TRAJ03_GQ_UP_DIAGONAL vec2 TRAJ03-PRO_PERP_ALPHA dotangle out gq-pro-relative-movement/traj03-gq-plane-2-alpha-twist-angle.dat name TRAJ03_GQ_PLANE_TWIST
+##/DONE/ ##CALCULATE THE TWIST of the GQ PLANE Relative to a perpendicular alpha dihedral on thrombin##
+go
+
+
+#<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+#<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+##Matrix correlated movement (matrix 32.11.46) (rms 32.11.64)>>>>>>>>>>>>>>>>>>>>>>>>>>
+crdaction ALL-TRAJ matrix correl :1-311 byres out correlated-matrix/matrix.dat 
+##Matrix correlated movement <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+##RMSD  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+##RMSD DNA only
+crdaction ALL-TRAJ rms RMSD-DNA-ALLATM first out rmsd/rmsd-dna-allatom.agr :1-16&!(@H=)
+crdaction ALL-TRAJ rms RMSD-DNA-BKBNE  first out rmsd/rmsd-dna-bkbne.agr @P,O3',C3',C4',C5',O5'
+crdaction ALL-TRAJ rms RMSD-DNA-PERRES first :1-16&!(@H=) perres perresout rmsd/rmsd-dna-perres.agr perresavg rmsd/rmsd-avgres.out
+go
+	hist RMSD-DNA-ALLATM,0,20,*,80 norm out rmsd/rmsd-dna-allatom-hist.agr
+	hist RMSD-DNA-BKBNE,0,20,*,80  norm out rmsd/rmsd-dna-bkbne-hist.agr
+	hist RMSD-DNA-PERRES,0,20,*,80 norm out rmsd/rmsd-dna-perres-hist.agr
+	
+##RMSD Protein only
+crdaction ALL-TRAJ rms RMSD-PRO-ALLATM first out rmsd/rmsd-pro-allatom.agr :17-311&!(@H=)
+crdaction ALL-TRAJ rms RMSD-PRO-BKBNE  first out rmsd/rmsd-pro-bkbne.agr @CA,C,O,N
+crdaction ALL-TRAJ rms RMSD-PRO-PERRES first :17-311&!(@H=) perres perresout rmsd/rmsd-pro-perres.agr perresavg rmsd/rmsd-pro-avgres.out
+go
+	hist RMSD-PRO-ALLATM,0,20,*,80 norm out rmsd/rmsd-pro-allatom-hist.agr
+	hist RMSD-PRO-BKBNE,0,20,*,80  norm out rmsd/rmsd-pro-bkbne-hist.agr
+	hist RMSD-PRO-PERRES,0,20,*,80 norm out rmsd/rmsd-pro-perres-hist.agr 
+
+##RMSD Whole complex
+crdaction ALL-TRAJ rms RMSD-ALL-ALLATM first out rmsd/rmsd-all-allatom.agr :1-311&!(@H=)
+crdaction ALL-TRAJ rms RMSD-ALL-BKBNE  first out rmsd/rmsd-all-bkbne.agr @CA,C,O,N,P,O3',C3',C4',C5',O5'
+crdaction ALL-TRAJ rms RMSD-ALL-PERRES first :1-311&!(@H=) perres perresout rmsd/rmsd-all-perres.agr perresavg rmsd/rmsd-all-avgres.out
+go
+	hist RMSD-ALL-ALLATM,0,20,*,80 norm out rmsd/rmsd-all-allatom-hist.agr
+	hist RMSD-ALL-BKBNE,0,20,*,80  norm out rmsd/rmsd-all-bkbne-hist.agr
+	hist RMSD-ALL-PERRES,0,20,*,80 norm out rmsd/rmsd-all-perres-hist.agr
+##RMSD end <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+##RMSF  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+crdaction ALL-TRAJ atomicfluct RMSF-DNA-RESIDUE1 out rmsf/rmsf-dna-residue-all.agr :1-15&!(@H=) byres
+crdaction ALL-TRAJ atomicfluct RMSF-PRO-RESIDUE out rmsf/rmsf-pro-residue.agr :17-311&!(@H=) byres
+crdaction ALL-TRAJ atomicfluct RMSF-ALL-RESIDUE out rmsf/rmsf-all-residue.agr :1-311&!(@H=) byres
+crdaction TRAJ01  atomicfluct RMSF-DNA-RESIDUE2 out rmsf/rmsf-dna-residue-rep1.agr :1-15&!(@H=) byres
+crdaction TRAJ02  atomicfluct RMSF-DNA-RESIDUE3 out rmsf/rmsf-dna-residue-rep2.agr :1-15&!(@H=) byres
+crdaction TRAJ03  atomicfluct RMSF-DNA-RESIDUE4 out rmsf/rmsf-dna-residue-rep3.agr :1-15&!(@H=) byres
+
+##RMSF end <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+##HBOND analysis >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+crdaction ALL-TRAJ hbond HBOND-ALL-INTERMOL  out hbond-analysis/hbond-all-intermol.agr :1-15,:53-311 angle 120 dist 3.4   avgout hbond-analysis/hbond-all-intermol-avg.agr  nointramol  series uuseries hbond-analysis/uu-all-intermol-bonds.dat crdframes 1,1,1
+crdaction ALL-TRAJ hbond HBOND-ALL-INTRA-DNA out hbond-analysis/hbond-all-intra-dna.agr :1-15 angle 120 dist 3.4   avgout hbond-analysis/hbond-all-avg-intra-dna.agr             series uuseries hbond-analysis/uu-all-dna-bonds.dat 
+crdaction ALL-TRAJ hbond HBOND-ALL-INTRA-PRO out hbond-analysis/hbond-all-intra-pro.agr :17-311 angle 120 dist 3.4 avgout hbond-analysis/hbond-all-avg-intra-pro.agr             series uuseries hbond-analysis/uu-all-pro-bonds.dat 
+
+crdaction TRAJ01 hbond HBOND-TRAJ1-INTERMOL  out hbond-analysis/hbond-traj1-intermol.agr :1-311 angle 120 dist 3.4   avgout hbond-analysis/hbond-traj1-avg-intermol.agr  nointramol series uuseries hbond-analysis/uu-traj1-intermol-bonds.dat 
+crdaction TRAJ01 hbond HBOND-TRAJ1-INTRA-DNA out hbond-analysis/hbond-traj1-intra-dna.agr :1-15 angle 120 dist 3.4   avgout hbond-analysis/hbond-traj1-avg-intra-dna.agr series uuseries hbond-analysis/uu-traj1-dna-bonds.dat 
+crdaction TRAJ01 hbond HBOND-TRAJ1-INTRA-PRO out hbond-analysis/hbond-traj1-intra-pro.agr :17-311 angle 120 dist 3.4 avgout hbond-analysis/hbond-traj1-avg-intra-pro.agr series uuseries hbond-analysis/uu-traj1-pro-bonds.dat 
+                                                                                                                                         
+crdaction TRAJ02 hbond HBOND-TRAJ2-INTERMOL  out hbond-analysis/hbond-traj2-intermol.agr :1-311 angle 120 dist 3.4   avgout hbond-analysis/hbond-traj2-avg-intermol.agr  nointramol  series uuseries hbond-analysis/uu-traj2-intermol-bonds.dat 
+crdaction TRAJ02 hbond HBOND-TRAJ2-INTRA-DNA out hbond-analysis/hbond-traj2-intra-dna.agr :1-15 angle 120 dist 3.4   avgout hbond-analysis/hbond-traj2-avg-intra-dna.agr   series uuseries hbond-analysis/uu-traj2-dna-bonds.dat 
+crdaction TRAJ02 hbond HBOND-TRAJ2-INTRA-PRO out hbond-analysis/hbond-traj2-intra-pro.agr :17-311 angle 120 dist 3.4 avgout hbond-analysis/hbond-traj2-avg-intra-pro.agr   series uuseries hbond-analysis/uu-traj2-pro-bonds.dat 
+                                                                                                                                         
+crdaction TRAJ03 hbond HBOND-TRAJ3-INTERMOL  out hbond-analysis/hbond-traj3-intermol.agr :1-311 angle 120 dist 3.4   avgout hbond-analysis/hbond-traj3-avg-intermol.agr  nointramol series uuseries hbond-analysis/uu-traj3-intermol-bonds.gnu 
+crdaction TRAJ03 hbond HBOND-TRAJ3-INTRA-DNA out hbond-analysis/hbond-traj3-intra-dna.agr :1-15 angle 120 dist 3.4   avgout hbond-analysis/hbond-traj3-avg-intra-dna.agr   series uuseries hbond-analysis/uu-traj3-dna-bonds.gnu 
+crdaction TRAJ03 hbond HBOND-TRAJ3-INTRA-PRO out hbond-analysis/hbond-traj3-intra-pro.agr :17-311 angle 120 dist 3.4 avgout hbond-analysis/hbond-traj3-avg-intra-pro.agr   series uuseries hbond-analysis/uu-traj3-pro-bonds.gnu 
+##HBOND Analysis done <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+##Radius of Gyration >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+crdaction ALL-TRAJ radgyr DNA-RADIUS-GYRATION :1-16&!(@H=)      out radius-of-gyration/dna-radgyr-all.agr     mass nomax
+crdaction ALL-TRAJ radgyr PRO-RADIUS-GYRATION :17-311&!(@H=)    out radius-of-gyration/pro-radgyr-all.agr     mass nomax
+crdaction ALL-TRAJ radgyr COMPLEX-RADIUS-GYRATION :1-311&!(@H=) out radius-of-gyration/complex-radgyr-all.agr mass nomax
+
+crdaction TRAJ01 radgyr DNA-RADIUS-GYRATION :1-16&!(@H=)      out radius-of-gyration/dna-radgyr-all.agr     mass nomax
+crdaction TRAJ01 radgyr PRO-RADIUS-GYRATION :17-311&!(@H=)    out radius-of-gyration/pro-radgyr-all.agr     mass nomax
+crdaction TRAJ01 radgyr COMPLEX-RADIUS-GYRATION :1-311&!(@H=) out radius-of-gyration/complex-radgyr-all.agr mass nomax
+
+crdaction TRAJ02 radgyr DNA-RADIUS-GYRATION :1-16&!(@H=)      out radius-of-gyration/dna-radgyr-all.agr     mass nomax
+crdaction TRAJ02 radgyr PRO-RADIUS-GYRATION :17-311&!(@H=)    out radius-of-gyration/pro-radgyr-all.agr     mass nomax
+crdaction TRAJ02 radgyr COMPLEX-RADIUS-GYRATION :1-311&!(@H=) out radius-of-gyration/complex-radgyr-all.agr mass nomax
+
+crdaction TRAJ03 radgyr DNA-RADIUS-GYRATION :1-16&!(@H=)      out radius-of-gyration/dna-radgyr-all.agr     mass nomax
+crdaction TRAJ03 radgyr PRO-RADIUS-GYRATION :17-311&!(@H=)    out radius-of-gyration/pro-radgyr-all.agr     mass nomax
+crdaction TRAJ03 radgyr COMPLEX-RADIUS-GYRATION :1-311&!(@H=) out radius-of-gyration/complex-radgyr-all.agr mass nomax
+##Radius of Gyration end <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+##GQ-analysis-all >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+##Distances GQ analysis
+crdaction ALL-TRAJ distance G1-dist-K  :1@O6  :16    out gq-analysis/G1-dist-K.agr 
+crdaction ALL-TRAJ distance G2-dist-K  :2@O6  :16    out gq-analysis/G2-dist-K.agr
+crdaction ALL-TRAJ distance G5-dist-K  :5@O6  :16    out gq-analysis/G5-dist-K.agr
+crdaction ALL-TRAJ distance G6-dist-K  :6@O6  :16    out gq-analysis/G6-dist-K.agr
+crdaction ALL-TRAJ distance G10-dist-K :10@O6 :16    out gq-analysis/G10-dist-K.agr
+crdaction ALL-TRAJ distance G11-dist-K :11@O6 :16    out gq-analysis/G11-dist-K.agr
+crdaction ALL-TRAJ distance G14-dist-K :14@O6 :16    out gq-analysis/G14-dist-K.agr
+crdaction ALL-TRAJ distance G15-dist-K :15@O6 :16    out gq-analysis/G15-dist-K.agr
+hist                        G1-dist-K,0,6,*,80  norm out gq-analysis/G1-dist-hist-K.agr
+hist                        G2-dist-K,0,6,*,80  norm out gq-analysis/G2-dist-hist-K.agr
+hist                        G5-dist-K,0,6,*,80  norm out gq-analysis/G5-dist-hist-K.agr
+hist                        G6-dist-K,0,6,*,80  norm out gq-analysis/G6-dist-hist-K.agr
+hist                        G10-dist-K,0,6,*,80 norm out gq-analysis/G10-dist-hist-K.agr
+hist                        G11-dist-K,0,6,*,80 norm out gq-analysis/G11-dist-hist-K.agr
+hist                        G14-dist-K,0,6,*,80 norm out gq-analysis/G14-dist-hist-K.agr
+hist                        G15-dist-K,0,6,*,80 norm out gq-analysis/G15-dist-hist-K.agr
+
+##Angles GQ analysis
+crdaction ALL-TRAJ angle G1-ang-k :1@C6 :1@O6 :16    out gq-analysis/G1-ang-k.agr
+crdaction ALL-TRAJ angle G2-ang-k :2@C6 :2@O6 :16    out gq-analysis/G2-ang-k.agr
+crdaction ALL-TRAJ angle G5-ang-k :5@C6 :5@O6 :16    out gq-analysis/G5-ang-k.agr
+crdaction ALL-TRAJ angle G6-ang-k :6@C6 :6@O6 :16    out gq-analysis/G6-ang-k.agr
+crdaction ALL-TRAJ angle G10-ang-k :10@C6 :10@O6 :16 out gq-analysis/G10-ang-k.agr
+crdaction ALL-TRAJ angle G11-ang-k :11@C6 :11@O6 :16 out gq-analysis/G11-ang-k.agr
+crdaction ALL-TRAJ angle G14-ang-k :14@C6 :14@O6 :16 out gq-analysis/G14-ang-k.agr
+crdaction ALL-TRAJ angle G15-ang-k :15@C6 :15@O6 :16 out gq-analysis/G15-ang-k.agr
+hist                     G1-ang-k,0,180,*,360  norm  out gq-analysis/G1-ang-hist-k.agr
+hist                     G2-ang-k,0,180,*,360  norm  out gq-analysis/G2-ang-hist-k.agr
+hist                     G5-ang-k,0,180,*,360  norm  out gq-analysis/G5-ang-hist-k.agr
+hist                     G6-ang-k,0,180,*,360  norm  out gq-analysis/G6-ang-hist-k.agr
+hist                     G10-ang-k,0,180,*,360 norm  out gq-analysis/G10-ang-hist-k.agr
+hist                     G11-ang-k,0,180,*,360 norm  out gq-analysis/G11-ang-hist-k.agr
+hist                     G14-ang-k,0,180,*,360 norm  out gq-analysis/G14-ang-hist-k.agr
+hist                     G15-ang-k,0,180,*,360 norm  out gq-analysis/G15-ang-hist-k.agr
+
+##Dihedrals GQ analysis
+crdaction ALL-TRAJ dihedral G1-dihe-k  :1@C5  :1@C6  :1@O6  :16 out gq-analysis/G1-dihe-k.agr
+crdaction ALL-TRAJ dihedral G2-dihe-k  :2@C5  :2@C6  :2@O6  :16 out gq-analysis/G2-dihe-k.agr
+crdaction ALL-TRAJ dihedral G5-dihe-k  :5@C5  :5@C6  :5@O6  :16 out gq-analysis/G5-dihe-k.agr
+crdaction ALL-TRAJ dihedral G6-dihe-k  :6@C5  :6@C6  :6@O6  :16 out gq-analysis/G6-dihe-k.agr
+crdaction ALL-TRAJ dihedral G10-dihe-k :10@C5 :10@C6 :10@O6 :16 out gq-analysis/G10-dihe-k.agr
+crdaction ALL-TRAJ dihedral G11-dihe-k :11@C5 :11@C6 :11@O6 :16 out gq-analysis/G11-dihe-k.agr
+crdaction ALL-TRAJ dihedral G14-dihe-k :14@C5 :14@C6 :14@O6 :16 out gq-analysis/G14-dihe-k.agr
+crdaction ALL-TRAJ dihedral G15-dihe-k :15@C5 :15@C6 :15@O6 :16 out gq-analysis/G15-dihe-k.agr
+hist                        G1-dihe-k,-180,180,*,360  norm      out gq-analysis/G1-dihe-hist-k.agr
+hist                        G2-dihe-k,-180,180,*,360  norm      out gq-analysis/G2-dihe-hist-k.agr
+hist                        G5-dihe-k,-180,180,*,360  norm      out gq-analysis/G5-dihe-hist-k.agr
+hist                        G6-dihe-k,-180,180,*,360  norm      out gq-analysis/G6-dihe-hist-k.agr
+hist                        G10-dihe-k,-180,180,*,360 norm      out gq-analysis/G10-dihe-hist-k.agr
+hist                        G11-dihe-k,-180,180,*,360 norm      out gq-analysis/G11-dihe-hist-k.agr
+hist                        G14-dihe-k,-180,180,*,360 norm      out gq-analysis/G14-dihe-hist-k.agr
+hist                        G15-dihe-k,-180,180,*,360 norm      out gq-analysis/G15-dihe-hist-k.agr
+
+###GQ Twist Determination
+##define Vectors
+crdaction ALL-TRAJ vector TT-A-NARROW-16   :1@C1' :6@C1'
+crdaction ALL-TRAJ vector TT-A-NARROW-25   :2@C1' :5@C1'
+crdaction ALL-TRAJ vector TGT-WIDE-610     :6@C1' :10@C1' 
+crdaction ALL-TRAJ vector TGT-WIDE-511     :5@C1' :11@C1'
+crdaction ALL-TRAJ vector TT-B-NARROW-1015 :10@C1' :15@C1'
+crdaction ALL-TRAJ vector TT-B-NARROW-1114 :11@C1' :14@C1'
+crdaction ALL-TRAJ vector EMP-WIDE-151     :15@C1' :1@C1' 
+crdaction ALL-TRAJ vector EMP-WIDE-142     :14@C1' :2@C1'
+go
+
+##perform vector math
+vectormath vec1 TT-A-NARROW-16   vec2 TT-A-NARROW-25   out gq-analysis/vect-TT-A-NARROW.out dotangle name TT-A-NARROW
+vectormath vec1 TGT-WIDE-610     vec2 TGT-WIDE-511     out gq-analysis/vect-TGT-WIDE.out    dotangle name TGT-WIDE
+vectormath vec1 TT-B-NARROW-1015 vec2 TT-B-NARROW-1114 out gq-analysis/vect-TT-B-NARROW.out dotangle name TT-B-NARROW
+vectormath vec1 EMP-WIDE-151     vec2 EMP-WIDE-142     out gq-analysis/vect-EMP-WIDE.out    dotangle name EMP-WIDE
+##GQ Analysis complete <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+##TT LOOP Analysis >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+##eta-theta backbone angles for scatter plots
+#G2
+crdaction ALL-TRAJ dihedral G2-ETA :1@C4' :2@P :2@C4' :3@P   out tt-loops/g2-eta.out range360
+crdaction ALL-TRAJ dihedral G2-THETA :2@P :2@C4' :3@P :3@C4' out tt-loops/g2-theta.out range360
+#T3
+crdaction ALL-TRAJ dihedral T3-ETA :2@C4' :3@P :3@C4' :4@P   out tt-loops/t3-eta.out range360
+crdaction ALL-TRAJ dihedral T3-THETA :3@P :3@C4' :4@P :4@C4' out tt-loops/t3-theta.out range360
+#T4
+crdaction ALL-TRAJ dihedral T4-ETA :3@C4' :4@P :4@C4' :5@P   out tt-loops/t4-eta.out range360
+crdaction ALL-TRAJ dihedral T4-THETA :4@P :4@C4' :5@P :5@C4' out tt-loops/t4-theta.out range360
+#G5
+crdaction ALL-TRAJ dihedral G5-ETA :4@C4' :5@P :5@C4' :6@P   out tt-loops/g5-eta.out range360
+crdaction ALL-TRAJ dihedral G5-THETA :5@P :5@C4' :6@P :6@C4' out tt-loops/g5-theta.out range360
+#TGT LOOP
+#T7
+crdaction ALL-TRAJ dihedral T7-ETA :6@C4' :7@P :7@C4' :8@P   out tt-loops/t7-eta.out range360
+crdaction ALL-TRAJ dihedral T7-THETA :7@P :7@C4' :8@P :8@C4' out tt-loops/t7-theta.out range360
+#G8
+crdaction ALL-TRAJ dihedral G8-ETA :7@C4' :8@P :8@C4' :9@P   out tt-loops/g8-eta.out range360
+crdaction ALL-TRAJ dihedral G8-THETA :8@P :8@C4' :9@P :9@C4' out tt-loops/g8-theta.out range360
+#T9
+crdaction ALL-TRAJ dihedral T9-ETA :8@C4' :9@P :9@C4' :10@P    out tt-loops/t9-eta.out range360
+crdaction ALL-TRAJ dihedral T9-THETA :9@P :9@C4' :10@P :10@C4' out tt-loops/t9-theta.out range360
+#G11
+crdaction ALL-TRAJ dihedral G11-ETA :-10@C4' :11@P :11@C4' :12@P   out tt-loops/g11-eta.out range360
+crdaction ALL-TRAJ dihedral G11-THETA :11@P :11@C4' :12@P :12@C4' out tt-loops/g11-theta.out range360
+#T12
+crdaction ALL-TRAJ dihedral T12-ETA :11@C4' :12@P :12@C4' :13@P   out tt-loops/t12-eta.out range360
+crdaction ALL-TRAJ dihedral T12-THETA :12@P :12@C4' :13@P :13@C4' out tt-loops/t12-theta.out range360
+#T13
+crdaction ALL-TRAJ dihedral T13-ETA :12@C4' :13@P :13@C4' :14@P   out tt-loops/t13-eta.out range360
+crdaction ALL-TRAJ dihedral T13-THETA :13@P :13@C4' :14@P :14@C4' out tt-loops/t13-theta.out range360
+#G14
+crdaction ALL-TRAJ dihedral G14-ETA :13@C4' :14@P :14@C4' :15@P   out tt-loops/g14-eta.out range360
+crdaction ALL-TRAJ dihedral G14-THETA :14@P :14@C4' :15@P :15@C4' out tt-loops/g14-theta.out range360
+##TT LOOP Analysis <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+##Video production for pymol (1000 frames) >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+crdout TRAJ01 videos/traj01-video.pdb pdb nobox crdframes 1,last,20 
+crdout TRAJ02 videos/traj02-video.pdb pdb nobox crdframes 1,last,20
+crdout TRAJ03 videos/traj03-video.pdb pdb nobox crdframes 1,last,20
+##Video production for pymol (1000 frames) Done <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+##Conformational space output for pymol >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+crdout ALL-TRAJ conformational-space-100-frames/conf-space-100.pdb pdb nobox crdframes 1,last,600
+crdout ALL-TRAJ conformational-space-200-frames/conf-space-200.pdb pdb nobox crdframes 1,last,300
+##Conformational space output for pymol <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+analyze statistics all out All-Statistics.dat
+go
+quit
