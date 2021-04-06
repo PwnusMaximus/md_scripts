@@ -1,0 +1,8 @@
+#!/bin/bash
+
+PT=$(ls -t *prmtop | head -n 1)
+echo "Using $PT as the prmtop"
+for file in $(ls *.{nc,mdcrd} 2> /dev/null)
+do echo "Trajctory $file has $(cpptraj -p "$PT" -y "$file" -tl | grep -o "[0-9]\+") Frames."
+done
+
