@@ -1,0 +1,61 @@
+###Cluster analysis using trajin >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+#Representative structures must be run with trajin
+
+##############################################################################
+##############################################################################
+##All Reps combined -----------------------------------------------
+parm TBA_wat_ions_stripped.prmtop
+trajin TBA_wat_ions_stripped_rep_all.nc 1 last 10
+
+cluster C1 \
+hieragglo epsilon 6 clusters 1 averagelinkage \
+rms @CA,C,O,N,P,C3',O3',C4',O5',C5'  \
+repout representative-structures/cluster-all-traj.rep repfmt pdb \
+out representative-structures/cnumvtime-all-traj.dat \
+summary representative-structures/cluster-all-traj-summary-s.dat
+go
+
+clear all
+
+##Rep 1 -----------------------------------------------------------
+parm TBA_wat_ions_stripped.prmtop
+trajin *rep1.nc 1 last 10
+
+cluster C1 \
+hieragglo epsilon 6 clusters 1 averagelinkage \
+rms @CA,C,O,N,P,C3',O3',C4',O5',C5'  \
+repout representative-structures/cluster-rep1.rep repfmt pdb \
+out representative-structures/cnumvtime-rep1.dat \
+summary representative-structures/cluster-rep1-summary-s.dat
+go
+
+clear all
+
+##Rep 2 -----------------------------------------------------------
+parm TBA_wat_ions_stripped.prmtop
+trajin *rep2.nc 1 last 10
+
+cluster C1 \
+hieragglo epsilon 6 clusters 1 averagelinkage \
+rms @CA,C,O,N,P,C3',O3',C4',O5',C5'  \
+repout representative-structures/cluster-rep2.rep repfmt pdb \
+out representative-structures/cnumvtime-rep2.dat \
+summary representative-structures/cluster-rep2-summary-s.dat
+go
+
+clear all
+
+##Rep 3 -----------------------------------------------------------
+parm TBA_wat_ions_stripped.prmtop
+trajin *rep3.nc 1 last 10
+
+cluster C1 \
+hieragglo epsilon 6 clusters 1 averagelinkage \
+rms @CA,C,O,N,P,C3',O3',C4',O5',C5'  \
+repout representative-structures/cluster-rep3.rep repfmt pdb \
+out representative-structures/cnumvtime-rep3.dat \
+summary representative-structures/cluster-rep3-summary-s.dat
+go 
+
+## Cluster analysis done <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+quit
