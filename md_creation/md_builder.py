@@ -34,46 +34,22 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, required=False, help="(Optional) Provide your config file")
 
 #Simulation Arguments
-parser.add_argument('--prmtop', '-p', type=str, required=False, help="provide your prmtop file") #make this required
+parser.add_argument('--prmtop', '-p', type=str, required=False, help="(Required) provide your prmtop file") #make this required
 parser.add_argument('--prefix', '-i', type=str, required=False, nargs='?', default='replace_me')
-parser.add_argument('--segments', '-n', type=int, required=False, nargs='?', default=1)
+parser.add_argument('--segments', '-n', type=int, required=False, nargs='?',help='number of segments to break simulation into')
+parser.add_argument('--nstime', '-t', type=int, required=False, nargs='?', help='simulation time per segment')
+parser.add_argument('--totaltime', '--tt', type=int, required=False, nargs='?',help='total simulation time per replica')
 #SBATCH arguments
-parser.add_argument('--walltime', '-w', type=str, required=False, nargs='?', default='00-24:00')
-parser.add_argument('--ntasks', type=str, required=False, nargs='?', default='8')
-parser.add_argument('--mem', '--ram', type=str, required=False, nargs='?', default='2048M')
-parser.add_argument('--partition', type=str, required=False, nargs='?', default='cpu2019')
-parser.add_argument('--mailtype', type=str, required=False, nargs='?', default='none', help='all, error, start, cancel or complete, none')
-parser.add_argument('--mailuser', type=str, required=False, nargs='?', help='input your email address')
-parser.add_argument('--nstime', '-t', type=int, required=False, nargs='?', default=1)
-parser.add_argument('--ntwx', type=float, required=False, nargs='?',       default=25000)
+parser.add_argument('--walltime', '-w', type=str, required=False, nargs='?')
+parser.add_argument('--ntasks', type=str, required=False, nargs='?')
+parser.add_argument('--mem', '--ram', type=str, required=False, nargs='?')
+parser.add_argument('--partition', type=str, required=False, nargs='?')
+parser.add_argument('--mailtype', type=str, required=False, nargs='?',help='all, error, start, cancel or complete, none')
+parser.add_argument('--mailuser', type=str, required=False, nargs='?',help='input your email address')
+parser.add_argument('--ntwx', type=float, required=False, nargs='?')
 #restraint file needed in the .in files?
 parser.add_argument('--restraint', type=str, required=False, nargs='?')
 parser.add_argument('--constraint', type=str, required=False, nargs='?')
-
-#.in md arguments
- ('--nstime'  default=1)
- ('--ntwx'    default=25000)
- ('--dt'      default=0.002)
- ('--cut'     default=10)
- ('--ntc'     default=2)
- ('--ntt'     default=3)
- ('--gamma_ln'default=3.0)
- ('--ntwr'    default=5000000)
- ('--ntpr'    default=50000)
- ('--tempi'   default=310.0)
- ('--temp0'   default=310.0)
- ('--pres0'   default=1.0)
- ('--imin'    default=0)
- ('--irest'   default=1)
- ('--ntx'     default=5)
- ('--ntp'     default=1)
- ('--ntb'     default=2)
- ('--ig'      default=-1)
- ('--iwrap'   default=1)
- ('--taup'    default=2.0)
- ('--ioutfm'  default=1)
-
-#email settings for SLURM
 
 #Creates a variable that stores all the arguments in an array. 
 #this new varaible is callable as args.<argument>
@@ -89,14 +65,16 @@ mempercpu  = args.mem            #also known as RAM
 partition  = args.partition
 mailtype   = args.mailtype
 mailuser   = args.mailuser
-nstime     = args.nstime
+nstime     = args.nstime         #length of a single chunk
+totaltime = args.totaltime     #length of full simulation (all chunks)
 ntwx       = args.ntwx           #default unless overwritten by config or flags
-restraint  = args.restraint      #default vaules
-constraint = args.constraint     #default vaules
+restraint  = args.restraint      #restraint file requested via flag
+constraint = args.constraint     #constraint file requested via flag
 
 #Default .in file values unless otherwise specified by a config file
 #these values will be output to a default-config.yml file if no config file is provided
-dt         = 0.002   #default simulation time step (in ps) default is 2fs 
+nsegments  = 1
+dt         = float(0.002)   #default simulation time step (in ps) default is 2fs 
 cut        = 10      #default non-bonded cutoff (angstroms)
 ntc        = 2       #qmshake restraint. Set to 2 if dt is 2fs or above 
 ntt        = 3       #adaptive Termostat to use. Default of 3 is the langevin thermostat (requires gamma_ln)
@@ -116,8 +94,6 @@ iwrap      = 1       #coordinate 'wrapping'. 1=molecules are re-centered xyz whe
 taup       = 2.0     #pressure relaxation time (in ps) 
 ioutfm     = 1       #format out output coordiantes, 1=binary netCDF trajectory
 
-
-#OS variables
 
 # If the config flag is enabled and config file provided 
 # config parser will read the config file and overwrite variables
@@ -168,10 +144,26 @@ else: #no config file is present (spit out the variables used to "used config fi
         config.write(configfile)
         print('No config file provided, Default config written to disk as default-run-config.yml')
 
+##Conditions and manipulation of variables##
+#creation of total ntlimit for each segment. 
+if args.totaltime is None and args.nstime is None and configFile is None: 
+	parser.error("--totaltime, --nstime args or configfile needed")
+if args.totaltime is not None and args.nstime is not None:
+	parser.error("either --totaltime or --nstime are required, not both")
+if args.totaltime is not None:
+	nstlim = int(args.totaltime * 1000 / dt / nsegments) #total time (ns) converted to ps by x1000. divided by time step and number of segment
+else:
+    args.nstime is not None
+    nstlim = int(args.nstime * 1000 / dt)  #time per segment (ns) converted to ps by x1000 and divided by time step 
+#summarize nstlim result and where it came from
+if args.totaltime is not None:
+	 print('--totaltime used for a frame count of ', nstlim)
+else:
+    args.nstime is not None 
+    print('--nstime used for a frame count of ', nstlim)
 
-#construction of useable variables from the input arguments
-nstime = args.nstime * 500000
 filePrefix = args.prefix
+
 
 print(nstime)
 
