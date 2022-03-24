@@ -10,7 +10,7 @@ equilibration time
 and more...
 benchmarking simulations
 benchmarking calculations from simulated files
-and more.. hopefully. 
+and more.. hopefully.
 """
 
 #import needed libraries and functions
@@ -32,10 +32,6 @@ parser = argparse.ArgumentParser()
 #injest config file if present in current working directory
 #use config file flag
 parser.add_argument('--config', '-i', type=str, required=False, help="(Optional) Provide your config file")
-
-
-
-
 
 #Simulation Arguments
 parser.add_argument('--prmtop', '-p', type=str, required=True, help="provide your prmtop file")
@@ -76,7 +72,7 @@ parser.add_argument('--restraint', type=str, required=False, nargs='?')
 parser.add_argument('--constraint', type=str, required=False, nargs='?')
 #email settings for SLURM
 
-#Creates a variable that stores all the arguments in an array. 
+#Creates a variable that stores all the arguments in an array.
 #this new varaible is callable as args.<argument>
 args = parser.parse_args()
 
@@ -118,15 +114,15 @@ constraint = args.constraint
 
 
 
-# If the config flag is enabled and config file provided 
+# If the config flag is enabled and config file provided
 # config parser will read the config file and overwrite variables
 configFile = args.config
 if configFile is not None:
     print('Using Config file ', configFile)
     configparser = configparser.RawConfigParser()
     configFilePath = os.path.join(os.getcwd(), configFile)
-    configparser.read(configFilePath) ##currently the configparger cannot read .in files correctly. 
-    
+    configparser.read(configFilePath) ##currently the configparger cannot read .in files correctly.
+
 
 
 
@@ -145,7 +141,7 @@ minHeatEqSLURM = f"""
 #SBATCH --ntasks={ntasks}           # number of MPI processes
 #SBATCH --mem-per-cpu={memPerCpu}   # memory; default unit is megabytes
 #SBATCH --time={wallTime}           # time (DD-HH:MM)
-#SBATCH --partition={partition}     # 
+#SBATCH --partition={partition}     #
 #SBATCH --mail-type={mailType}
 #SBATCH --mail-user={mailUser}
 # mpirun or srun also work
@@ -178,13 +174,13 @@ exit
 
 
 
-#to do immediate, 
-    # 
+#to do immediate,
+    #
 
  #prebuilt variables
- 
-        
-"""       
+
+
+"""
 #taken from Ryan's Perl Script
  #!/usr/bin/perl
 use warnings;
@@ -287,7 +283,7 @@ min01: min waters, counter ions, freeze: solute
 EOF
 	open(my $output_fh3, '>', "$header\_2min_solute_hydrogens.in") or die "Couldn't open file $header-md$i.sh :$! \n";
 	print $output_fh3 <<EOF;
-min02: min solute hydrogen atoms 
+min02: min solute hydrogen atoms
 \&cntrl
   imin = 1, maxcyc = 2000, ncyc = 1000,
   ntf = 1, iwrap=1,
@@ -297,11 +293,11 @@ min02: min solute hydrogen atoms
   restraint_wt=100.0,
   cut = 10.0,
 /
-\&end	
+\&end
 EOF
 	open(my $output_fh4, '>', "$header\_3min_solute.in") or die "Couldn't open file $header-md$i.sh :$! \n";
 	print $output_fh4 <<EOF;
-min03: min solute 
+min03: min solute
 \&cntrl
   imin = 1, maxcyc = 2000, ncyc = 1000,
   ntf = 1, iwrap=1,
@@ -322,7 +318,7 @@ min04: min everything - no restraints
   ntwx = 500, ntwe = 500, ntpr = 10,
   ntr = 0,
   cut = 10.0,
-/ 
+/
 \&end
 EOF
 	open(my $output_fh6, '>', "$header\_5aheat.in") or die "Couldn't open file $header-md$i.sh :$! \n";
@@ -331,7 +327,7 @@ heat05a: heat everything with weak restraint on solute
 \&cntrl
   imin=0,
   nstlim=20000, dt=0.001, ntx=1, irest=0,
-  ntpr=250, ntwr=1000, ntwx=250, 
+  ntpr=250, ntwr=1000, ntwx=250,
   ntt=3, ig=-1, gamma_ln = 1.0, tempi=10.0, temp0=60.0,
   ntp=0,
   ntc=1, ntf=1, iwrap=1,
@@ -346,7 +342,7 @@ heat05b: heat everything with weak restraint on solute
 \&cntrl
   imin=0,
   nstlim=20000, dt=0.001, ntx=5, irest=1,
-  ntpr=250, ntwr=1000, ntwx=250, 
+  ntpr=250, ntwr=1000, ntwx=250,
   ntt=3, ig=-1, gamma_ln = 1.0, tempi=60.0, temp0=110.0,
   ntp=0,
   ntc=1, ntf=1, iwrap=1,
@@ -361,7 +357,7 @@ heat05c: heat everything with weak restraint on solute
 \&cntrl
   imin=0,
   nstlim=20000, dt=0.001, ntx=5, irest=1,
-  ntpr=250, ntwr=1000, ntwx=250, 
+  ntpr=250, ntwr=1000, ntwx=250,
   ntt=3, ig=-1, gamma_ln = 1.0, tempi=110.0, temp0=160.0,
   ntp=0,
   ntc=1, ntf=1, iwrap=1,
@@ -376,7 +372,7 @@ heat05d: heat everything with weak restraint on solute
 \&cntrl
   imin=0,
   nstlim=20000, dt=0.001, ntx=5, irest=1,
-  ntpr=250, ntwr=1000, ntwx=250, 
+  ntpr=250, ntwr=1000, ntwx=250,
   ntt=3, ig=-1, gamma_ln = 1.0, tempi=160.0, temp0=210.0,
   ntp=0,
   ntc=1, ntf=1, iwrap=1,
@@ -391,7 +387,7 @@ heat05e: heat everything with weak restraint on solute
 \&cntrl
   imin=0,
   nstlim=20000, dt=0.001, ntx=5, irest=1,
-  ntpr=250, ntwr=1000, ntwx=250, 
+  ntpr=250, ntwr=1000, ntwx=250,
   ntt=3, ig=-1, gamma_ln = 1.0, tempi=210.0, temp0=260.0,
   ntp=0,
   ntc=1, ntf=1, iwrap=1,
@@ -406,7 +402,7 @@ heat05f: heat everything with weak restraint on solute
 \&cntrl
   imin=0,
   nstlim=20000, dt=0.001, ntx=5, irest=1,
-  ntpr=250, ntwr=1000, ntwx=250, 
+  ntpr=250, ntwr=1000, ntwx=250,
   ntt=3, ig=-1, gamma_ln = 1.0, tempi=260.0, temp0=310.0,
   ntp=0,
   ntc=1, ntf=1, iwrap=1,
@@ -420,13 +416,13 @@ EOF
 equilibrate06: restraint at 20
 \&cntrl
   nstlim=10000, dt=0.002, ntx=5, irest=1,
-  ntpr=250, ntwr=1000, ntwx=250, 
+  ntpr=250, ntwr=1000, ntwx=250,
   ntt=3, temp0=310.0, gamma_ln=1.0, ig=-1,
   ntp=1, taup=2.0,
   ntc=2, ntf=2, iwrap=1, ntb=2,
   cut = 10.0,
   ntr=1, restraintmask = '!(:WAT,Na+,Cl-)', restraint_wt=20.0,
-/ 
+/
 \&end
 EOF
 	open(my $output_fh13, '>', "$header\_7eq_15.in") or die "Couldn't open file $header-md$i.sh :$! \n";
@@ -434,13 +430,13 @@ EOF
 equilibrate07: restraint at 15
 \&cntrl
   nstlim=10000, dt=0.002, ntx=5, irest=1,
-  ntpr=250, ntwr=1000, ntwx=250, 
+  ntpr=250, ntwr=1000, ntwx=250,
   ntt=3, temp0=310.0, gamma_ln=1.0, ig=-1,
   ntp=1, taup=2.0,
   ntc=2, ntf=2, iwrap=1, ntb=2,
   cut = 10.0,
   ntr=1, restraintmask = '!(:WAT,Na+,Cl-)', restraint_wt=15.0,
-/ 
+/
 \&end
 EOF
 	open(my $output_fh14, '>', "$header\_8eq_10.in") or die "Couldn't open file $header-md$i.sh :$! \n";
@@ -448,13 +444,13 @@ EOF
 equilibrate08: restraint at 10
 \&cntrl
   nstlim=10000, dt=0.002, ntx=5, irest=1,
-  ntpr=250, ntwr=1000, ntwx=250, 
+  ntpr=250, ntwr=1000, ntwx=250,
   ntt=3, temp0=310.0, gamma_ln=1.0, ig=-1,
   ntp=1, taup=2.0,
   ntc=2, ntf=2, iwrap=1, ntb=2,
   cut = 10.0,
   ntr=1, restraintmask = '!(:WAT,Na+,Cl-)', restraint_wt=10.0,
-/ 
+/
 \&end
 EOF
 	open(my $output_fh15, '>', "$header\_9eq_5.in") or die "Couldn't open file $header-md$i.sh :$! \n";
@@ -462,13 +458,13 @@ EOF
 equilibrate09: restraint at 5
 \&cntrl
   nstlim=10000, dt=0.002, ntx=5, irest=1,
-  ntpr=250, ntwr=1000, ntwx=250, 
+  ntpr=250, ntwr=1000, ntwx=250,
   ntt=3, temp0=310.0, gamma_ln=1.0, ig=-1,
   ntp=1, taup=2.0,
   ntc=2, ntf=2, iwrap=1, ntb=2,
   cut = 10.0,
   ntr=1, restraintmask = '!(:WAT,Na+,Cl-)', restraint_wt=5.0,
-/ 
+/
 \&end
 EOF
 	open(my $output_fh16, '>', "$header\_10eq_1.5.in") or die "Couldn't open file $header-md$i.sh :$! \n";
