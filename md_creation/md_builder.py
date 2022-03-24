@@ -31,20 +31,16 @@ parser = argparse.ArgumentParser()
 
 #injest config file if present in current working directory
 #use config file flag
-parser.add_argument('--config', '-i', type=str, required=False, help="(Optional) Provide your config file")
-
-
-
-
+parser.add_argument('--config', type=str, required=False, help="(Optional) Provide your config file")
 
 #Simulation Arguments
-parser.add_argument('--prmtop', '-p', type=str, required=True, help="provide your prmtop file")
+parser.add_argument('--prmtop', '-p', type=str, required=False, help="provide your prmtop file") #make this required
 parser.add_argument('--prefix', '-i', type=str, required=False, nargs='?', default='replace_me')
 parser.add_argument('--segments', '-n', type=int, required=False, nargs='?', default=1)
 #SBATCH arguments
 parser.add_argument('--walltime', '-w', type=str, required=False, nargs='?', default='00-24:00')
 parser.add_argument('--ntasks', type=str, required=False, nargs='?', default='8')
-parser.add_argument('--mem', '--ram', type=str, required=False, nargs='?', default='2024M')
+parser.add_argument('--mem', '--ram', type=str, required=False, nargs='?', default='2048M')
 parser.add_argument('--partition', type=str, required=False, nargs='?', default='cpu2019')
 parser.add_argument('--mailtype', type=str, required=False, nargs='?', default='none', help='all, error, start, cancel or complete, none')
 parser.add_argument('--mailuser', type=str, required=False, nargs='?', help='input your email address')
@@ -83,13 +79,13 @@ args = parser.parse_args()
 #Convert Args to variables
 prmtop     = args.prmtop
 prefix     = args.prefix
-nSegments  = args.segments
-wallTime   = args.walltime
+nsegments  = args.segments
+walltime   = args.walltime
 ntasks     = args.ntasks
-memPerCpu  = args.mem          #also known as RAM
+mempercpu  = args.mem          #also known as RAM
 partition  = args.partition
-mailType   = args.mailtype
-mailUser   = args.mailuser
+mailtype   = args.mailtype
+mailuser   = args.mailuser
 nstime     = args.nstime
 ntwx       = args.ntwx
 dt         = args.dt
@@ -116,8 +112,6 @@ constraint = args.constraint
 
 #OS variables
 
-
-
 # If the config flag is enabled and config file provided 
 # config parser will read the config file and overwrite variables
 configFile = args.config
@@ -126,8 +120,46 @@ if configFile is not None:
     configparser = configparser.RawConfigParser()
     configFilePath = os.path.join(os.getcwd(), configFile)
     configparser.read(configFilePath) ##currently the configparger cannot read .in files correctly. 
-    
-
+    #fill (overwrite) arguments with variables from the config file
+    #SLURM Variables
+    nsegments  = configparser['SLURM']['nsegments']
+    walltime   = configparser['SLURM']['walltime']
+    ntasks     = configparser['SLURM']['ntasks']
+    mempercpu  = configparser['SLURM']['mempercpu']   #also known as RAM
+    partition  = configparser['SLURM']['partition']
+    mailtype   = configparser['SLURM']['mailtype']
+    mailuser   = configparser['SLURM']['mailuser']
+    #PMEMD varialbes
+    nstime     = configparser['PMEMD']['nstime']
+    ntwx       = configparser['PMEMD']['ntwx']
+    dt         = configparser['PMEMD']['dt']
+    cut        = configparser['PMEMD']['cut']
+    ntc        = configparser['PMEMD']['ntc']
+    ntt        = configparser['PMEMD']['ntt']
+    gamma_ln   = configparser['PMEMD']['gamma_ln']
+    ntwr       = configparser['PMEMD']['ntwr']
+    ntpr       = configparser['PMEMD']['ntpr']
+    tempi      = configparser['PMEMD']['tempi']
+    temp0      = configparser['PMEMD']['temp0']
+    pres0      = configparser['PMEMD']['pres0']
+    imin       = configparser['PMEMD']['imin']
+    irest      = configparser['PMEMD']['irest']
+    ntx        = configparser['PMEMD']['ntx']
+    ntp        = configparser['PMEMD']['ntp']
+    ntb        = configparser['PMEMD']['ntb']
+    ig         = configparser['PMEMD']['ig']
+    iwrap      = configparser['PMEMD']['iwrap']
+    taup       = configparser['PMEMD']['taup']
+    ioutfm     = configparser['PMEMD']['ioutfm']
+    restraint  = configparser['PMEMD']['restraint']
+    constraint = configparser['PMEMD']['constraint']
+else: #no config file is present (spit out the variables used to "used config file")
+    config = configparser.RawConfigParser()
+    config['SLURM'] = {'nsegments':nsegments,'walltime':walltime,'ntasks':ntasks,'mempercpu':mempercpu,'partition':partition,'mailtype':mailtype,'mailuser':mailuser}
+    config['PMEMD'] = {'nstime':nstime,'ntwx':ntwx,'dt':dt,'cut':cut,'ntc':ntc,'ntt':ntt,'gamma_ln':gamma_ln,'ntwr':ntwr,'ntpr':ntpr,'tempi':tempi,'temp0':temp0,'pres0':pres0,'imin':imin,'irest':irest,'ntx':ntx,'ntp':ntp,'ntb':ntb,'ig':ig,'iwrap':iwrap,'taup':taup,'ioutfm':ioutfm,'restraint':restraint,'constraint':constraint}
+    with open('default-run-config.yml', 'w') as configfile:
+        config.write(configfile)
+        print('No config file provided, Default config written to disk as default-run-config.yml')
 
 
 #construction of useable variables from the input arguments
@@ -143,11 +175,11 @@ print(filePrefix)
 minHeatEqSLURM = f"""
 #!/bin/bash
 #SBATCH --ntasks={ntasks}           # number of MPI processes
-#SBATCH --mem-per-cpu={memPerCpu}   # memory; default unit is megabytes
-#SBATCH --time={wallTime}           # time (DD-HH:MM)
+#SBATCH --mem-per-cpu={mempercpu}   # memory; default unit is megabytes
+#SBATCH --time={walltime}           # time (DD-HH:MM)
 #SBATCH --partition={partition}     # 
-#SBATCH --mail-type={mailType}
-#SBATCH --mail-user={mailUser}
+#SBATCH --mail-type={mailtype}
+#SBATCH --mail-user={mailuser}
 # mpirun or srun also work
 
 echo "Current working directory is `pwd`"
