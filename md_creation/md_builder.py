@@ -26,11 +26,18 @@ appDescription = "A Python re-build of ryans MD creation script. \
     This script is re-implimented fully in python to create min-heat-eq simulation files as well as md_production files"
 
 parser = argparse.ArgumentParser()
-#SBATCH arguments
+#Simulation Arguments
 parser.add_argument('--prmtop', '-p', type=str, required=True, help="provide your prmtop file")
 parser.add_argument('--prefix', '-i', type=str, required=False, nargs='?', default='replace_me')
-parser.add_argument('--walltime', '-w', type=str, required=False, nargs='?', default='00-24:00')
 parser.add_argument('--segments', '-n', type=int, required=False, nargs='?', default=1)
+#SBATCH arguments
+parser.add_argument('--walltime', '-w', type=str, required=False, nargs='?', default='00-24:00')
+parser.add_argument('--ntasks', type=str, required=False, nargs='?', default='8')
+parser.add_argument('--mem', '--ram', type=str, required=False, nargs='?', default='2024M')
+parser.add_argument('--partition', type=str, required=False, nargs='?', default='cpu2019')
+parser.add_argument('--mailtype', type=str, required=False, nargs='?', default='none', help='all, error, start, cancel or complete, none')
+parser.add_argument('--mailuser', type=str, required=False, nargs='?', help='input your email address')
+
 #.in md arguments
 parser.add_argument('--nstime', '-t', type=int, required=False, nargs='?', default=1)
 parser.add_argument('--ntwx', type=float, required=False, nargs='?', default=25000)
@@ -57,20 +64,91 @@ parser.add_argument('--ioutfm',type=int, required=False, nargs='?', default=1)
 parser.add_argument('--restraint', type=str, required=False, nargs='?')
 parser.add_argument('--constraint', type=str, required=False, nargs='?')
 #email settings for SLURM
-parser.add_argument('--mail_type', type=str, required=False, nargs='?', help='all, error, start, cancel or complete')
-parser.add_argument('--mail_user', type=str, required=False, nargs='?', help='input your email address')
 
+#Creates a variable that stores all the arguments in an array. 
+#this new varaible is callable as args.<argument>
 args = parser.parse_args()
 
+#Convert Args to variables
+prmtop     = args.prmtop
+prefix     = args.prefix
+nSegments  = args.segments
+wallTime   = args.walltime
+ntasks     = args.ntasks
+memPerCpu  = args.mem          #also known as RAM
+partition  = args.partition
+mailType  = args.mailtype
+mailUser  = args.mailuser
+nstime     = args.nstime
+ntwx       = args.ntwx
+dt         = args.dt
+cut        = args.cut
+ntc        = args.ntc
+ntt        = args.ntt
+gamma_ln   = args.gamma_ln
+ntwr       = args.ntwr
+ntpr       = args.ntpr
+tempi      = args.tempi
+temp0      = args.temp0
+pres0      = args.pres0
+imin       = args.imin
+irest      = args.irest
+ntx        = args.ntx
+ntp        = args.ntp
+ntb        = args.ntb
+ig         = args.ig
+iwrap      = args.iwrap
+taup       = args.taup
+ioutfm     = args.ioutfm
+restraint  = args.restraint
+constraint = args.constraint
 
 #construction of useable variables from the input arguments
 nstlim = args.nstime * 500000
 filePrefix = args.prefix
-restraint
 
 print(nstlim)
 
 print(filePrefix)
+
+
+#Variale place holder for min-heat-eq file
+minHeatEqSLURM = f"""
+#!/bin/bash
+#SBATCH --ntasks={ntasks}           # number of MPI processes
+#SBATCH --mem-per-cpu={memPerCpu}   # memory; default unit is megabytes
+#SBATCH --time={wallTime}           # time (DD-HH:MM)
+#SBATCH --partition={partition}     # 
+#SBATCH --mail-type={mailType}
+#SBATCH --mail-user={mailUser}
+# mpirun or srun also work
+
+echo "Current working directory is `pwd`"
+echo "------------------"
+
+echo "Starting run at: `date`"
+
+module purge
+module load intel/2019.3 openmpi/4.1.1-gnu uofl/amber/18p17_at19p9_intel20193_openmpi312gnu_mkl
+
+srun -n {ntasks} \$AMBERHOME/bin/pmemd -O -i {prefix}_1min_solv_counterions.in -o {prefix}_1min.out -p {prefix}.prmtop -c {prefix}.inpcrd -r {prefix}_1min.rst7 -ref {prefix}.inpcrd
+srun -n {ntasks} \$AMBERHOME/bin/pmemd -O -i {prefix}_2min_solute_hydrogens.in -o {prefix}_2min.out -p {prefix}.prmtop -c {prefix}_1min.rst7 -ref {prefix}_1min.rst7 -r {prefix}_2min.rst7
+srun -n {ntasks} \$AMBERHOME/bin/pmemd -O -i {prefix}_3min_solute.in -o {prefix}_3min.out -p {prefix}.prmtop -c {prefix}_2min.rst7 -ref {prefix}_2min.rst7 -r {prefix}_3min.rst7
+srun -n {ntasks} \$AMBERHOME/bin/pmemd -O -i {prefix}_4min_all.in -o {prefix}_4min.out -p {prefix}.prmtop -c {prefix}_3min.rst7 -r {prefix}_4min.rst7
+srun -n {ntasks} \$AMBERHOME/bin/pmemd -O -i {prefix}_5aheat.in -o {prefix}_5aheat.out -p {prefix}.prmtop -c {prefix}_4min.rst7 -r {prefix}_5aheat.rst7 -ref {prefix}_4min.rst7 -x {prefix}_5aheat.nc
+srun -n {ntasks} \$AMBERHOME/bin/pmemd -O -i {prefix}_5bheat.in -o {prefix}_5bheat.out -p {prefix}.prmtop -c {prefix}_5aheat.rst7 -r {prefix}_5bheat.rst7 -ref {prefix}_5aheat.rst7 -x {prefix}_5bheat.nc
+srun -n {ntasks} \$AMBERHOME/bin/pmemd -O -i {prefix}_5cheat.in -o {prefix}_5cheat.out -p {prefix}.prmtop -c {prefix}_5bheat.rst7 -r {prefix}_5cheat.rst7 -ref {prefix}_5bheat.rst7 -x {prefix}_5cheat.nc
+srun -n {ntasks} \$AMBERHOME/bin/pmemd -O -i {prefix}_5dheat.in -o {prefix}_5dheat.out -p {prefix}.prmtop -c {prefix}_5cheat.rst7 -r {prefix}_5dheat.rst7 -ref {prefix}_5cheat.rst7 -x {prefix}_5dheat.nc
+srun -n {ntasks} \$AMBERHOME/bin/pmemd -O -i {prefix}_5eheat.in -o {prefix}_5eheat.out -p {prefix}.prmtop -c {prefix}_5dheat.rst7 -r {prefix}_5eheat.rst7 -ref {prefix}_5dheat.rst7 -x {prefix}_5eheat.nc
+srun -n {ntasks} \$AMBERHOME/bin/pmemd -O -i {prefix}_5fheat.in -o {prefix}_5fheat.out -p {prefix}.prmtop -c {prefix}_5eheat.rst7 -r {prefix}_5fheat.rst7 -ref {prefix}_5eheat.rst7 -x {prefix}_5fheat.nc
+srun -n {ntasks} \$AMBERHOME/bin/pmemd -O -i {prefix}_6eq_20.in -o {prefix}_6eq.out -p {prefix}.prmtop -c {prefix}_5fheat.rst7 -r {prefix}_6eq.rst7 -ref {prefix}_5fheat.rst7 -x {prefix}_6eq.nc
+srun -n {ntasks} \$AMBERHOME/bin/pmemd -O -i {prefix}_7eq_15.in -o {prefix}_7eq.out -p {prefix}.prmtop -c {prefix}_6eq.rst7 -r {prefix}_7eq.rst7 -ref {prefix}_6eq.rst7 -x {prefix}_7eq.nc
+srun -n {ntasks} \$AMBERHOME/bin/pmemd -O -i {prefix}_8eq_10.in -o {prefix}_8eq.out -p {prefix}.prmtop -c {prefix}_7eq.rst7 -r {prefix}_8eq.rst7 -ref {prefix}_7eq.rst7 -x {prefix}_8eq.nc
+srun -n {ntasks} \$AMBERHOME/bin/pmemd -O -i {prefix}_9eq_5.in -o {prefix}_9eq.out -p {prefix}.prmtop -c {prefix}_8eq.rst7 -r {prefix}_9eq.rst7 -ref {prefix}_8eq.rst7 -x {prefix}_9eq.nc
+srun -n {ntasks} \$AMBERHOME/bin/pmemd -O -i {prefix}_10eq_1.5.in -o {prefix}_10eq.out -p {prefix}.prmtop -c {prefix}_9eq.rst7 -r {prefix}_10eq.rst7 -ref {prefix}_9eq.rst7 -x {prefix}_10eq.nc
+exit
+"""
+
 
 
 #to do immediate, 
