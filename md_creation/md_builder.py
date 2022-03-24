@@ -20,12 +20,23 @@ and more.. hopefully.
 import os
 import sys, getopt
 import argparse
+import configparser
 
 #default Variables
 appDescription = "A Python re-build of ryans MD creation script. \
     This script is re-implimented fully in python to create min-heat-eq simulation files as well as md_production files"
 
+#Create the variable parser for all the arguments to go into
 parser = argparse.ArgumentParser()
+
+#injest config file if present in current working directory
+#use config file flag
+parser.add_argument('--config', '-i', type=str, required=False, help="(Optional) Provide your config file")
+
+
+
+
+
 #Simulation Arguments
 parser.add_argument('--prmtop', '-p', type=str, required=True, help="provide your prmtop file")
 parser.add_argument('--prefix', '-i', type=str, required=False, nargs='?', default='replace_me')
@@ -77,8 +88,8 @@ wallTime   = args.walltime
 ntasks     = args.ntasks
 memPerCpu  = args.mem          #also known as RAM
 partition  = args.partition
-mailType  = args.mailtype
-mailUser  = args.mailuser
+mailType   = args.mailtype
+mailUser   = args.mailuser
 nstime     = args.nstime
 ntwx       = args.ntwx
 dt         = args.dt
@@ -103,11 +114,27 @@ ioutfm     = args.ioutfm
 restraint  = args.restraint
 constraint = args.constraint
 
+#OS variables
+
+
+
+# If the config flag is enabled and config file provided 
+# config parser will read the config file and overwrite variables
+configFile = args.config
+if configFile is not None:
+    print('Using Config file ', configFile)
+    configparser = configparser.RawConfigParser()
+    configFilePath = os.path.join(os.getcwd(), configFile)
+    configparser.read(configFilePath) ##currently the configparger cannot read .in files correctly. 
+    
+
+
+
 #construction of useable variables from the input arguments
-nstlim = args.nstime * 500000
+nstime = args.nstime * 500000
 filePrefix = args.prefix
 
-print(nstlim)
+print(nstime)
 
 print(filePrefix)
 
