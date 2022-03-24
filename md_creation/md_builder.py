@@ -44,71 +44,78 @@ parser.add_argument('--mem', '--ram', type=str, required=False, nargs='?', defau
 parser.add_argument('--partition', type=str, required=False, nargs='?', default='cpu2019')
 parser.add_argument('--mailtype', type=str, required=False, nargs='?', default='none', help='all, error, start, cancel or complete, none')
 parser.add_argument('--mailuser', type=str, required=False, nargs='?', help='input your email address')
-
-#.in md arguments
 parser.add_argument('--nstime', '-t', type=int, required=False, nargs='?', default=1)
-parser.add_argument('--ntwx', type=float, required=False, nargs='?', default=25000)
-parser.add_argument('--dt',type=float, required=False, nargs='?', default=0.002)
-parser.add_argument('--cut',type=int, required=False, nargs='?', default=10)
-parser.add_argument('--ntc',type=int, required=False, nargs='?', default=2)
-parser.add_argument('--ntt',type=int, required=False, nargs='?', default=3)
-parser.add_argument('--gamma_ln',type=float, required=False, nargs='?', default=3.0)
-parser.add_argument('--ntwr',type=int, required=False, nargs='?', default=5000000)
-parser.add_argument('--ntpr',type=int, required=False, nargs='?', default=50000)
-parser.add_argument('--tempi',type=float, required=False, nargs='?', default=310.0)
-parser.add_argument('--temp0',type=float, required=False, nargs='?', default=310.0)
-parser.add_argument('--pres0',type=float, required=False, nargs='?', default=1.0)
-parser.add_argument('--imin',type=int, required=False, nargs='?', default=0)
-parser.add_argument('--irest',type=int, required=False, nargs='?', default=1)
-parser.add_argument('--ntx',type=int, required=False, nargs='?', default=5)
-parser.add_argument('--ntp',type=int, required=False, nargs='?', default=1)
-parser.add_argument('--ntb',type=int, required=False, nargs='?', default=2)
-parser.add_argument('--ig',type=int, required=False, nargs='?', default=-1)
-parser.add_argument('--iwrap',type=int, required=False, nargs='?', default=1)
-parser.add_argument('--taup',type=float, required=False, nargs='?', default=2.0)
-parser.add_argument('--ioutfm',type=int, required=False, nargs='?', default=1)
+parser.add_argument('--ntwx', type=float, required=False, nargs='?',       default=25000)
 #restraint file needed in the .in files?
 parser.add_argument('--restraint', type=str, required=False, nargs='?')
 parser.add_argument('--constraint', type=str, required=False, nargs='?')
+
+#.in md arguments
+ ('--nstime'  default=1)
+ ('--ntwx'    default=25000)
+ ('--dt'      default=0.002)
+ ('--cut'     default=10)
+ ('--ntc'     default=2)
+ ('--ntt'     default=3)
+ ('--gamma_ln'default=3.0)
+ ('--ntwr'    default=5000000)
+ ('--ntpr'    default=50000)
+ ('--tempi'   default=310.0)
+ ('--temp0'   default=310.0)
+ ('--pres0'   default=1.0)
+ ('--imin'    default=0)
+ ('--irest'   default=1)
+ ('--ntx'     default=5)
+ ('--ntp'     default=1)
+ ('--ntb'     default=2)
+ ('--ig'      default=-1)
+ ('--iwrap'   default=1)
+ ('--taup'    default=2.0)
+ ('--ioutfm'  default=1)
+
 #email settings for SLURM
 
 #Creates a variable that stores all the arguments in an array. 
 #this new varaible is callable as args.<argument>
 args = parser.parse_args()
 
-#Convert Args to variables
+#Read in Args/flags to fill variables
 prmtop     = args.prmtop
 prefix     = args.prefix
 nsegments  = args.segments
 walltime   = args.walltime
 ntasks     = args.ntasks
-mempercpu  = args.mem          #also known as RAM
+mempercpu  = args.mem            #also known as RAM
 partition  = args.partition
 mailtype   = args.mailtype
 mailuser   = args.mailuser
 nstime     = args.nstime
-ntwx       = args.ntwx
-dt         = args.dt
-cut        = args.cut
-ntc        = args.ntc
-ntt        = args.ntt
-gamma_ln   = args.gamma_ln
-ntwr       = args.ntwr
-ntpr       = args.ntpr
-tempi      = args.tempi
-temp0      = args.temp0
-pres0      = args.pres0
-imin       = args.imin
-irest      = args.irest
-ntx        = args.ntx
-ntp        = args.ntp
-ntb        = args.ntb
-ig         = args.ig
-iwrap      = args.iwrap
-taup       = args.taup
-ioutfm     = args.ioutfm
-restraint  = args.restraint
-constraint = args.constraint
+ntwx       = args.ntwx           #default unless overwritten by config or flags
+restraint  = args.restraint      #default vaules
+constraint = args.constraint     #default vaules
+
+#Default .in file values unless otherwise specified by a config file
+#these values will be output to a default-config.yml file if no config file is provided
+dt         = 0.002   #default simulation time step (in ps) default is 2fs 
+cut        = 10      #default non-bonded cutoff (angstroms)
+ntc        = 2       #qmshake restraint. Set to 2 if dt is 2fs or above 
+ntt        = 3       #adaptive Termostat to use. Default of 3 is the langevin thermostat (requires gamma_ln)
+gamma_ln   = 3.0     #required for ntt. Collision frequency in ps
+ntwr       = 5000000 #steps between restart files being written
+ntpr       = 50000   #steps between MM energy written
+tempi      = 310.0   #initial tempurature
+temp0      = 310.0   #reference tempurure (tempurature to maintain the simulation at)
+pres0      = 1.0     #reference pressure (in bars) 1 bar = 0.987 atm
+imin       = 0       #run minimization flag. 0 off, 1 ON with spe MM calculation
+irest      = 1       #restart simulation? 0= generate velocities randomly, 1=restart from .rst7 file
+ntx        = 1       #option to read coordinates from the inpcrd file. read formatted with no initial velocity info
+ntp        = 1       #constant pressure dynamics, 1=md with isotropic position scaling
+ntb        = 2       #periodic boundry conditions. 0=off, 1=const volume, 2=const pressure.
+ig         = -1      #seed for the pseudo-random number generator. 
+iwrap      = 1       #coordinate 'wrapping'. 1=molecules are re-centered xyz when they pass through a boundry. (aka. autoimaged) 
+taup       = 2.0     #pressure relaxation time (in ps) 
+ioutfm     = 1       #format out output coordiantes, 1=binary netCDF trajectory
+
 
 #OS variables
 
