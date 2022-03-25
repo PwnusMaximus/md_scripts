@@ -19,7 +19,7 @@ ntwr       : 500000
 ntpr       : 50000
 tempi      : 310.0
 temp0      : 310.0
-pres0      : 0
+pres0      : 1
 imin       : 1
 irest      : 5
 ntx        : 1
