@@ -95,6 +95,8 @@ ig         = -1      #seed for the pseudo-random number generator.
 iwrap      = 1       #coordinate 'wrapping'. 1=molecules are re-centered xyz when they pass through a boundry. (aka. autoimaged) 
 taup       = 2.0     #pressure relaxation time (in ps) 
 ioutfm     = 1       #format out output coordiantes, 1=binary netCDF trajectory
+ntr        = 0 
+ntf        = 2
 
 
 # If the config flag is enabled and config file provided 
@@ -147,7 +149,11 @@ else: #no config file is present (spit out the variables used to "used config fi
         print('No config file provided, Default config written to disk as default-run-config.yml')
 
 ##Conditions and manipulation of variables##
-#creation of total ntlimit for each segment. 
+#creation of total ntlimit for each segment.
+#user can provide
+#   --totaltime
+#   --nstime
+#   --configfile (with nstime) 
 if args.totaltime is None and args.nstime is None and configFile is None: 
 	parser.error("--totaltime, --nstime args or configfile needed")
 if args.totaltime is not None and args.nstime is not None:
@@ -164,12 +170,30 @@ else:
     args.nstime is not None 
     print('--nstime used for a frame count of ', nstlim)
 
-filePrefix = args.prefix
+#now back calculate what the time per chunk is in ns
+nschunk = int(nstlim * dt / 1000) #this is used in the MD_in_file to tell the user how many ns each chunk is targeting. 
 
 
-print(nstime)
 
-print(filePrefix)
+#this is the .in file that will be used for MD production
+md_in_file = f"""
+MD_chunk: {nschunk} ns of MD
+ &cntrl
+  imin = {imin}, irest = {irest}, ntx = {ntx},
+  ntb = {ntb}, pres0 = {pres0}, ntp = {ntp},
+  ig={ig}, ioutfm={ioutfm},
+  iwrap={iwrap},
+  taup = {taup},
+  cut = {cut}, ntr = {ntr},
+  ntc = {ntx}, ntf = {ntf}, ntb={ntb},
+  tempi = {tempi}, temp0 = {temp0},
+  ntt = {ntt}, gamma_ln = {gamma_ln},
+  nstlim = {nstlim}, dt = {dt},
+  ntpr = {ntpr}, ntwx = {ntwx}, ntwr = {ntwr},
+/
+&end
+"""
+
 
 
 #Variale place holder for min-heat-eq file
