@@ -352,7 +352,7 @@ heat05: heat everything with weak restraint on solute 10->60
 &cntrl
   imin= {imin_no},
   nstlim={nstlim_heat}, dt={dt}, ntx={ntx}, irest=0,
-  ntpr=250, ntwr= {ntwr_heat_eq}, ntwx=250, 
+   ntpr={ntpr}, ntwr= {ntwr_heat_eq}, ntwx={ntwx}, 
   ntt=3, ig=-1, gamma_ln = 1.0, tempi=10.0, temp0=60.0,
   ntp=0,
   ntc=1, ntf=1, iwrap=1,
@@ -367,7 +367,7 @@ heat06: heat everything with weak restraint on solute 60->110
 &cntrl
   imin= {imin_no},
   nstlim={nstlim_heat}, dt={dt}, ntx={ntx*5}, irest=1,
-  ntpr=250, ntwr= {ntwr_heat_eq}, ntwx=250, 
+   ntpr={ntpr}, ntwr= {ntwr_heat_eq}, ntwx={ntwx}, 
   ntt=3, ig=-1, gamma_ln = 1.0, tempi=60.0, temp0=110.0,
   ntp=0,
   ntc=1, ntf=1, iwrap=1,
@@ -382,7 +382,7 @@ heat07: heat everything with weak restraint on solute 110->160
 &cntrl
   imin= {imin_no},
   nstlim={nstlim_heat}, dt={dt}, ntx={ntx*5}, irest=1,
-  ntpr=250, ntwr= {ntwr_heat_eq}, ntwx=250, 
+   ntpr={ntpr}, ntwr= {ntwr_heat_eq}, ntwx={ntwx}, 
   ntt=3, ig=-1, gamma_ln = 1.0, tempi=110.0, temp0=160.0,
   ntp=0,
   ntc=1, ntf=1, iwrap=1,
@@ -397,7 +397,7 @@ heat08: heat everything with weak restraint on solute 160->260
 &cntrl
   imin= {imin_no},
   nstlim={nstlim_heat}, dt={dt}, ntx={ntx*5}, irest=1,
-  ntpr=250, ntwr= {ntwr_heat_eq}, ntwx=250,
+   ntpr={ntpr}, ntwr= {ntwr_heat_eq}, ntwx={ntwx},
   ntt=3, ig=-1, gamma_ln = 1.0, tempi=160.0, temp0=210.0,
   ntp=0,
   ntc=1, ntf=1, iwrap=1,
@@ -412,7 +412,7 @@ heat09: heat everything with weak restraint on solute 210->260
 &cntrl
   imin= {imin_no},
   nstlim={nstlim_heat}, dt={dt}, ntx={ntx*5}, irest=1,
-  ntpr=250, ntwr= {ntwr_heat_eq}, ntwx=250, 
+   ntpr={ntpr}, ntwr= {ntwr_heat_eq}, ntwx={ntwx}, 
   ntt=3, ig=-1, gamma_ln = 1.0, tempi=210.0, temp0=260.0,
   ntp=0,
   ntc=1, ntf=1, iwrap=1,
@@ -427,7 +427,7 @@ heat10: heat everything with weak restraint on solute 260->310
 &cntrl
   imin= {imin_no},
   nstlim={nstlim_heat}, dt={dt}, ntx={ntx*5}, irest=1,
-  ntpr=250, ntwr= {ntwr_heat_eq}, ntwx=250, 
+   ntpr={ntpr}, ntwr= {ntwr_heat_eq}, ntwx={ntwx}, 
   ntt=3, ig=-1, gamma_ln = 1.0, tempi=260.0, temp0=310.0,
   ntp=0,
   ntc=1, ntf=1, iwrap=1,
@@ -442,8 +442,8 @@ eq11 = f"""
 equilibrate11: restraint at 20
 &cntrl
   nstlim={nstlim_eq}, dt={dt*2}, ntx=5, irest=1,
-  ntpr=250, ntwr= {ntwr_heat_eq}, ntwx=250, 
-  ntt=3, temp0=310.0, gamma_ln=1.0, ig=-1,
+   ntpr={ntpr}, ntwr= {ntwr_heat_eq}, ntwx={ntwx}, 
+  ntt=3, temp0=310.0, gamma_ln={gamma_ln}, ig=-1,
   ntp=1, taup=2.0,
   ntc=2, ntf=2, iwrap=1, ntb=2,
   cut = {cut},
@@ -456,8 +456,8 @@ eq12 = f"""
 equilibrate12: restraint at 15
 &cntrl
   nstlim={nstlim_eq}, dt={dt*2}, ntx=5, irest=1,
-  ntpr=250, ntwr= {ntwr_heat_eq}, ntwx=250, 
-  ntt=3, temp0=310.0, gamma_ln=1.0, ig=-1,
+   ntpr={ntpr}, ntwr= {ntwr_heat_eq}, ntwx={ntwx}, 
+  ntt=3, temp0=310.0, gamma_ln={gamma_ln}, ig=-1,
   ntp=1, taup=2.0,
   ntc=2, ntf=2, iwrap=1, ntb=2,
   cut = {cut},
@@ -470,8 +470,8 @@ eq13 = f"""
 equilibrate13: restraint at 10
 &cntrl
   nstlim={nstlim_eq}, dt={dt*2}, ntx=5, irest=1,
-  ntpr=250, ntwr= {ntwr_heat_eq}, ntwx=250, 
-  ntt=3, temp0=310.0, gamma_ln=1.0, ig=-1,
+   ntpr={ntpr}, ntwr= {ntwr_heat_eq}, ntwx={ntwx}, 
+  ntt=3, temp0=310.0, gamma_ln={gamma_ln}, ig=-1,
   ntp=1, taup=2.0,
   ntc=2, ntf=2, iwrap=1, ntb=2,
   cut = {cut},
@@ -484,8 +484,8 @@ eq14 = f"""
 equilibrate14: restraint at 5
 &cntrl
   nstlim={nstlim_eq}, dt={dt*2}, ntx=5, irest=1,
-  ntpr=250, ntwr= {ntwr_heat_eq}, ntwx=250, 
-  ntt=3, temp0=310.0, gamma_ln=1.0, ig=-1,
+   ntpr={ntpr}, ntwr= {ntwr_heat_eq}, ntwx={ntwx}, 
+  ntt=3, temp0=310.0, gamma_ln={gamma_ln}, ig=-1,
   ntp=1, taup=2.0,
   ntc=2, ntf=2, iwrap=1, ntb=2,
   cut = {cut},
@@ -498,8 +498,8 @@ eq15 = f"""
 equilibrate14: restraint at 1.5
 &cntrl
   nstlim={nstlim_eq}, dt={dt*2}, ntx=5, irest=1,
-  ntpr=250, ntwr= {ntwr_heat_eq}, ntwx=250,
-  ntt=3, temp0=310.0, gamma_ln=1.0, ig=-1,
+   ntpr={ntpr}, ntwr= {ntwr_heat_eq}, ntwx={ntwx},
+  ntt=3, temp0=310.0, gamma_ln={gamma_ln}, ig=-1,
   ntp=1, taup=2.0,
   ntc=2, ntf=2, iwrap=1, ntb=2,
   cut = {cut},
