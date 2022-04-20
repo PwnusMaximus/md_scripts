@@ -68,13 +68,14 @@ partition  = args.partition
 mailtype   = args.mailtype
 mailuser   = args.mailuser
 nstime     = args.nstime         #length of a single chunk
-totaltime = args.totaltime     #length of full simulation (all chunks)
+totaltime  = args.totaltime     #length of full simulation (all chunks)
 ntwx       = args.ntwx           #default unless overwritten by config or flags
 restraint  = args.restraint      #restraint file requested via flag
 constraint = args.constraint     #constraint file requested via flag
 
 #Default .in file values unless otherwise specified by a config file
 #these values will be output to a default-config.yml file if no config file is provided
+#These are PRODUCTION run Default vaules
 nsegments  = 1
 dt         = 0.002  #default simulation time step (in ps) default is 2fs 
 cut        = 10      #default non-bonded cutoff (angstroms)
@@ -95,7 +96,7 @@ ig         = -1      #seed for the pseudo-random number generator.
 iwrap      = 1       #coordinate 'wrapping'. 1=molecules are re-centered xyz when they pass through a boundry. (aka. autoimaged) 
 taup       = 2.0     #pressure relaxation time (in ps) 
 ioutfm     = 1       #format out output coordiantes, 1=binary netCDF trajectory
-ntr        = 0 
+ntr        = 0
 ntf        = 2
 
 
@@ -174,7 +175,6 @@ else:
 nschunk = int(nstlim * dt / 1000) #this is used in the MD_in_file to tell the user how many ns each chunk is targeting. 
 
 
-
 #this is the .in file that will be used for MD production
 md_in_file = f"""
 MD_chunk: {nschunk} ns of MD
@@ -251,215 +251,259 @@ srun -n 4 cpptraj.mpi -i {prefix}-cpptraj_combine.in > {prefix}-cpptraj_combine.
 exit
 """
 
-min01 = """
+#These are Min-heat-eq run values
+#min01 min waters, counter ions, freeze: solute
+#MINIMIZATION VARIABLES
+imin_yes = 1 #minimization IS active
+maxcyc = 4000
+ncyc = 1000
+ntf = 1
+iwrap = 1 #YES, create periodic boundry conditions when iwrap = 1
+ntwx = 500
+ntwe = 500
+ntpr = 10
+ntr_on = 1 #restraint mask is applied when ntr = 1
+ntr_off = 0 #restraint mask is NOT applied when ntr = 0
+restraintmask_solvent = "'!(:WAT,Na+,Cl-)'"      #freeze solute
+restraintmask_solute_but_not_h = "':WAT,Na+,Cl- & !@H'"   #freeze solvent, but not hydrogens on solute
+restraint_wt= 100.0 #force restraint to act on restraint mask
+cut = 10.0 #non-bonded calculation cut off set to xx.x angstroms
+
+#HEATING VARIABLES
+imin_no = 0 #minimization is not active, regular MD
+nstlim_heat = 20000 #20,000 steps of simulation
+dt = 0.001 #time step fo 1 femtosecond
+ntx = 1 
+irest = 0 
+ntpr_heat = 250
+ntwr_heat_eq = 1000
+ntwx_heat = 250
+ntt_heat = 3
+ig_heat = -1 
+gamma_ln_heat = 1.0
+ntp_heat = 0
+ntc_heat = 1
+ntf_heat = 1
+ntr_heat = 1
+restraint_wt_heat = 25.0
+
+#EQ VARIABLES
+nstlim_eq = 10000
+
+
+#Minimization .in files start here
+min01 = f"""
 min01: min waters, counter ions, freeze: solute
 &cntrl
-  imin = 1, maxcyc = 4000, ncyc = 1000,
-  ntf = 1, iwrap=1,
-  ntwx = 500, ntwe = 500, ntpr = 10,
-  ntr = 1,
-  restraintmask = '!(:WAT,Na+,Cl-)',
-  restraint_wt=100.0,
-  cut = 10.0,
+  imin = {imin_yes}, maxcyc = {maxcyc}, ncyc = {ncyc},
+  ntf = {ntf}, iwrap={iwrap},
+  ntwx = {ntwx}, ntwe = {ntwe}, ntpr = {ntpr},
+  ntr = {ntr_on},
+  restraintmask = {restraintmask_solvent},
+  restraint_wt= {restraint_wt},
+  cut = {cut},
 /
 &end
 """
 
-min02 = """
+min02 = f"""
 min02: min solute hydrogen atoms 
 &cntrl
-  imin = 1, maxcyc = 2000, ncyc = 1000,
-  ntf = 1, iwrap=1,
-  ntwx = 500, ntwe = 500, ntpr = 10,
-  ntr = 1,
-  restraintmask = ':WAT,Na+,Cl- & !@H',
-  restraint_wt=100.0,
-  cut = 10.0,
+  imin = {imin_yes}, maxcyc = {int(maxcyc/2)}, ncyc = {ncyc},
+  ntf = {ntf}, iwrap= {iwrap},
+  ntwx = {ntwx}, ntwe = {ntwe}, ntpr = {ntpr},
+  ntr = {ntr_on},
+  restraintmask = {restraintmask_solute_but_not_h}
+  restraint_wt= {restraint_wt},
+  cut = {cut},
 /
 &end	
 """
 
-min03 = """
+min03 = f"""
 min03: min solute 
 &cntrl
-  imin = 1, maxcyc = 2000, ncyc = 1000,
-  ntf = 1, iwrap=1,
-  ntwx = 500, ntwe = 500, ntpr = 10,
-  ntr = 1,
-  restraintmask = '!(:WAT,Na+,Cl-)',
-  restraint_wt=100.0,
-  cut = 10.0,
+  imin = {imin_yes}, maxcyc = {int(maxcyc/2)}, ncyc = {ncyc},
+  ntf = {ntf}, iwrap={iwrap},
+  ntwx = {ntwx}, ntwe = {ntwe}, ntpr = {ntpr},
+  ntr = {ntr_on},
+  restraintmask = {restraintmask_solvent},
+  restraint_wt= {restraint_wt},
+  cut = {cut},
 /
 &end
 """
 
-min04 = """
+min04 = f"""
 min04: min everything - no restraints
 &cntrl
-  imin = 1, maxcyc = 3000, ncyc = 1000,
-  ntf = 1, iwrap=1,
-  ntwx = 500, ntwe = 500, ntpr = 10,
-  ntr = 0,
-  cut = 10.0,
+  imin = {imin_yes}, maxcyc = {int(maxcyc-1000)}, ncyc = {ncyc},
+  ntf = {ntf}, iwrap= {iwrap},
+  ntwx = {ntwx}, ntwe = {ntwe}, ntpr = {ntpr},
+  ntr = {ntr_off},
+  cut = {cut},
 / 
-&end"""
+&end
+"""
 
-heat05 = """
-heat05: heat everything with weak restraint on solute
+#HEATING .in files start here
+heat05 = f"""
+heat05: heat everything with weak restraint on solute 10->60
 &cntrl
-  imin=0,
-  nstlim=20000, dt=0.001, ntx=1, irest=0,
-  ntpr=250, ntwr=1000, ntwx=250, 
+  imin= {imin_no},
+  nstlim={nstlim_heat}, dt={dt}, ntx={ntx}, irest=0,
+  ntpr=250, ntwr= {ntwr_heat_eq}, ntwx=250, 
   ntt=3, ig=-1, gamma_ln = 1.0, tempi=10.0, temp0=60.0,
   ntp=0,
   ntc=1, ntf=1, iwrap=1,
-  cut = 10.0,
-  ntr=1, restraintmask = '!(:WAT,Na+,Cl-)', restraint_wt=25.0,
+  cut = {cut},
+  ntr=1, restraintmask = {restraintmask_solvent}, restraint_wt={restraint_wt_heat},
 /
 &end
 """
 
-heat06 = """
-heat06: heat everything with weak restraint on solute
+heat06 = f"""
+heat06: heat everything with weak restraint on solute 60->110
 &cntrl
-  imin=0,
-  nstlim=20000, dt=0.001, ntx=5, irest=1,
-  ntpr=250, ntwr=1000, ntwx=250, 
+  imin= {imin_no},
+  nstlim={nstlim_heat}, dt={dt}, ntx={ntx*5}, irest=1,
+  ntpr=250, ntwr= {ntwr_heat_eq}, ntwx=250, 
   ntt=3, ig=-1, gamma_ln = 1.0, tempi=60.0, temp0=110.0,
   ntp=0,
   ntc=1, ntf=1, iwrap=1,
-  cut = 10.0,
-  ntr=1, restraintmask = '!(:WAT,Na+,Cl-)', restraint_wt=25.0,
+  cut = {cut},
+  ntr=1, restraintmask = {restraintmask_solvent}, restraint_wt={restraint_wt_heat},
 /
 &end
 """
 
-heat07 = """
-heat07: heat everything with weak restraint on solute
+heat07 = f"""
+heat07: heat everything with weak restraint on solute 110->160
 &cntrl
-  imin=0,
-  nstlim=20000, dt=0.001, ntx=5, irest=1,
-  ntpr=250, ntwr=1000, ntwx=250, 
+  imin= {imin_no},
+  nstlim={nstlim_heat}, dt={dt}, ntx={ntx*5}, irest=1,
+  ntpr=250, ntwr= {ntwr_heat_eq}, ntwx=250, 
   ntt=3, ig=-1, gamma_ln = 1.0, tempi=110.0, temp0=160.0,
   ntp=0,
   ntc=1, ntf=1, iwrap=1,
-  cut = 10.0,
-  ntr=1, restraintmask = '!(:WAT,Na+,Cl-)', restraint_wt=25.0,
+  cut = {cut},
+  ntr=1, restraintmask = {restraintmask_solvent}, restraint_wt={restraint_wt_heat},
 /
 &end
 """
 
-heat08 = """
-heat08: heat everything with weak restraint on solute
+heat08 = f"""
+heat08: heat everything with weak restraint on solute 160->260
 &cntrl
-  imin=0,
-  nstlim=20000, dt=0.001, ntx=5, irest=1,
-  ntpr=250, ntwr=1000, ntwx=250, 
+  imin= {imin_no},
+  nstlim={nstlim_heat}, dt={dt}, ntx={ntx*5}, irest=1,
+  ntpr=250, ntwr= {ntwr_heat_eq}, ntwx=250,
   ntt=3, ig=-1, gamma_ln = 1.0, tempi=160.0, temp0=210.0,
   ntp=0,
   ntc=1, ntf=1, iwrap=1,
-  cut = 10.0,
-  ntr=1, restraintmask = '!(:WAT,Na+,Cl-)', restraint_wt=25.0,
+  cut = {cut},
+  ntr=1, restraintmask = {restraintmask_solvent}, restraint_wt={restraint_wt_heat},
 /
 &end
 """
 
-heat09 = """
-heat09: heat everything with weak restraint on solute
+heat09 = f"""
+heat09: heat everything with weak restraint on solute 210->260
 &cntrl
-  imin=0,
-  nstlim=20000, dt=0.001, ntx=5, irest=1,
-  ntpr=250, ntwr=1000, ntwx=250, 
+  imin= {imin_no},
+  nstlim={nstlim_heat}, dt={dt}, ntx={ntx*5}, irest=1,
+  ntpr=250, ntwr= {ntwr_heat_eq}, ntwx=250, 
   ntt=3, ig=-1, gamma_ln = 1.0, tempi=210.0, temp0=260.0,
   ntp=0,
   ntc=1, ntf=1, iwrap=1,
-  cut = 10.0,
-  ntr=1, restraintmask = '!(:WAT,Na+,Cl-)', restraint_wt=25.0,
+  cut = {cut},
+  ntr=1, restraintmask = {restraintmask_solvent}, restraint_wt={restraint_wt_heat},
 /
 &end
 """
 
-heat10 = """
-heat10: heat everything with weak restraint on solute
+heat10 = f"""
+heat10: heat everything with weak restraint on solute 260->310
 &cntrl
-  imin=0,
-  nstlim=20000, dt=0.001, ntx=5, irest=1,
-  ntpr=250, ntwr=1000, ntwx=250, 
+  imin= {imin_no},
+  nstlim={nstlim_heat}, dt={dt}, ntx={ntx*5}, irest=1,
+  ntpr=250, ntwr= {ntwr_heat_eq}, ntwx=250, 
   ntt=3, ig=-1, gamma_ln = 1.0, tempi=260.0, temp0=310.0,
   ntp=0,
   ntc=1, ntf=1, iwrap=1,
-  cut = 10.0,
-  ntr=1, restraintmask = '!(:WAT,Na+,Cl-)', restraint_wt=25.0,
+  cut = {cut},
+  ntr=1, restraintmask = {restraintmask_solvent}, restraint_wt={restraint_wt_heat},
 /
 &end
 """
 
-eq11 = """
+#EQUILIBRATION .in files start here
+eq11 = f"""
 equilibrate11: restraint at 20
 &cntrl
-  nstlim=10000, dt=0.002, ntx=5, irest=1,
-  ntpr=250, ntwr=1000, ntwx=250, 
+  nstlim={nstlim_eq}, dt={dt*2}, ntx=5, irest=1,
+  ntpr=250, ntwr= {ntwr_heat_eq}, ntwx=250, 
   ntt=3, temp0=310.0, gamma_ln=1.0, ig=-1,
   ntp=1, taup=2.0,
   ntc=2, ntf=2, iwrap=1, ntb=2,
-  cut = 10.0,
-  ntr=1, restraintmask = '!(:WAT,Na+,Cl-)', restraint_wt=20.0,
+  cut = {cut},
+  ntr=1, restraintmask = {restraintmask_solvent}, restraint_wt=20.0,
 / 
 &end
 """
 
-eq12 = """
+eq12 = f"""
 equilibrate12: restraint at 15
 &cntrl
-  nstlim=10000, dt=0.002, ntx=5, irest=1,
-  ntpr=250, ntwr=1000, ntwx=250, 
+  nstlim={nstlim_eq}, dt={dt*2}, ntx=5, irest=1,
+  ntpr=250, ntwr= {ntwr_heat_eq}, ntwx=250, 
   ntt=3, temp0=310.0, gamma_ln=1.0, ig=-1,
   ntp=1, taup=2.0,
   ntc=2, ntf=2, iwrap=1, ntb=2,
-  cut = 10.0,
-  ntr=1, restraintmask = '!(:WAT,Na+,Cl-)', restraint_wt=15.0,
+  cut = {cut},
+  ntr=1, restraintmask = {restraintmask_solvent}, restraint_wt=15.0,
 / 
 &end
 """
 
-eq13 = """
+eq13 = f"""
 equilibrate13: restraint at 10
 &cntrl
-  nstlim=10000, dt=0.002, ntx=5, irest=1,
-  ntpr=250, ntwr=1000, ntwx=250, 
+  nstlim={nstlim_eq}, dt={dt*2}, ntx=5, irest=1,
+  ntpr=250, ntwr= {ntwr_heat_eq}, ntwx=250, 
   ntt=3, temp0=310.0, gamma_ln=1.0, ig=-1,
   ntp=1, taup=2.0,
   ntc=2, ntf=2, iwrap=1, ntb=2,
-  cut = 10.0,
-  ntr=1, restraintmask = '!(:WAT,Na+,Cl-)', restraint_wt=10.0,
+  cut = {cut},
+  ntr=1, restraintmask = {restraintmask_solvent}, restraint_wt=10.0,
 / 
 &end
 """
 
-eq14 = """
+eq14 = f"""
 equilibrate14: restraint at 5
 &cntrl
-  nstlim=10000, dt=0.002, ntx=5, irest=1,
-  ntpr=250, ntwr=1000, ntwx=250, 
+  nstlim={nstlim_eq}, dt={dt*2}, ntx=5, irest=1,
+  ntpr=250, ntwr= {ntwr_heat_eq}, ntwx=250, 
   ntt=3, temp0=310.0, gamma_ln=1.0, ig=-1,
   ntp=1, taup=2.0,
   ntc=2, ntf=2, iwrap=1, ntb=2,
-  cut = 10.0,
-  ntr=1, restraintmask = '!(:WAT,Na+,Cl-)', restraint_wt=5.0,
+  cut = {cut},
+  ntr=1, restraintmask = {restraintmask_solvent}, restraint_wt=5.0,
 / 
 &end
 """
 
-eq15 = """
+eq15 = f"""
 equilibrate14: restraint at 1.5
 &cntrl
-  nstlim=10000, dt=0.002, ntx=5, irest=1,
-  ntpr=250, ntwr=1000, ntwx=250,
+  nstlim={nstlim_eq}, dt={dt*2}, ntx=5, irest=1,
+  ntpr=250, ntwr= {ntwr_heat_eq}, ntwx=250,
   ntt=3, temp0=310.0, gamma_ln=1.0, ig=-1,
   ntp=1, taup=2.0,
   ntc=2, ntf=2, iwrap=1, ntb=2,
-  cut = 10.0,
-  ntr=1, restraintmask = '!(:WAT,Na+,Cl-)', restraint_wt=1.5,
+  cut = {cut},
+  ntr=1, restraintmask = {restraintmask_solvent}, restraint_wt=1.5,
 /
 &end
 EOF
