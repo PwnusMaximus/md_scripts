@@ -1,3 +1,19 @@
+"""
+This command is indented to be issued on a directory with hbond-avg.dat files from cpptraj hbond analysis. 
+AFTER this series of bash commands is issued: 
+    for file in *avg.dat; do awk '{ print $1 "---" $3 " " $5}' $file > cut$file; done
+    mkdir originals
+    find . -type f -not -name '*cut*' -exec mv {} originals/ \;
+    
+The intended purpose is to match occupancies of hydrogen bonds accross systems and across replicates
+
+The basic workflow is sort the hydrogen bond names
+then to append column #2 (Occupancy %) to the right for each additional hbond-avg.dat file 
+and finally to output a .csv file for further analysis in excel
+
+Author: Makay Murray 2022
+"""
+
 import pandas as pd
 import os
 import glob
