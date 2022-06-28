@@ -33,6 +33,8 @@ Lab: Wetmore @ uLeth
 import pandas as pd
 import os
 import glob
+import sys
+
 #%% 
 df_final = None # initilize an empty df, this will be filled in the next loop
 #%%
@@ -43,7 +45,7 @@ dat_files = glob.glob(os.path.join(path, "*.dat"))
 if dat_files:
     print("We found", len(dat_files), ".dat files!")
 else: 
-    print('there are NO .dat files here... Are we in the right directory?') 
+    sys.exit('there are NO .dat files here... Are we in the right directory?')
 #%%
 # loop over the list of dat files
 for f in dat_files: 
