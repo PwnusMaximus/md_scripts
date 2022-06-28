@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''    
 COMBINE HYDROGEN BOND AVERAGES SCRIPT
 "Align occupancies of hydrogen bonds to their name accross similar systems or across replicates"
