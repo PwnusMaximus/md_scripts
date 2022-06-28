@@ -13,7 +13,8 @@ Module load command for Cedar users:
 How to use:
     1. Fill a dir with hbond-avg.dat files from cpptraj (for mutated or replicate systems where hbonds will align)
     2. Ensure the names of the hbond files are meaningful (system-1.dat, system-2.dat etc.)
-    3. Call this script by issuing bash$: combine-hbond-avg.py (AFTER installing in your ~/bin) 
+    3. Run this script with "combine-hbond-avg.py" (AFTER installing in your ~/bin) 
+        3a. Run this script while you are INSIDE the directory with the hbond-avg.dat files 
     4. Take the output .csv file for futher inspection elsewhere
     
 Workflow of the script: 
@@ -38,6 +39,11 @@ df_final = None # initilize an empty df, this will be filled in the next loop
 #Get all the .dat file names in current path
 path = os.getcwd()
 dat_files = glob.glob(os.path.join(path, "*.dat"))
+
+if dat_files:
+    print("We found", len(dat_files), ".dat files!")
+else: 
+    print('there are NO .dat files here... Are we in the right directory?') 
 #%%
 # loop over the list of dat files
 for f in dat_files: 
@@ -56,12 +62,12 @@ for f in dat_files:
     df = df.sort_values(by=['hbond'])
     df.pop('#Acceptor') #delete the #Acceptor column
     df.pop('Donor') #Delete the Donor Column
-    df = df.reindex(columns=['hbond','Frac'])
+    df = df.reindex(columns=['hbond','Frac']) #re-order the columns
     df = df.rename(columns = {"Frac":f}) #convert the Frac column header into the file name the data is from. 
     df_final = df_final.merge(df, how='left', on='hbond',) #final merge of the loop to append to the final DF
 #%%
-df_final.drop(df_final.columns[[1]], axis = 1, inplace = True)
-df_final.to_csv('final_hbond.csv', header=True)
+df_final.drop(df_final.columns[[1]], axis = 1, inplace = True) #delete the first duplicate FRAC column from the first file
+df_final.to_csv('final_hbond.csv', header=True) #save the df to a file
 
 print('The Hbond Data has been combined! Please check final_hbond.csv for your data')
 #%%
