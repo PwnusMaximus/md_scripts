@@ -1,13 +1,28 @@
 '''    
-The intended purpose is to match occupancies of hydrogen bonds accross systems and across replicates
+COMBINE HYDROGEN BOND AVERAGES SCRIPT
+"Align occupancies of hydrogen bonds to their name accross similar systems or across replicates"
 
-This command is indented to be issued on a directory with hbond-avg.dat files from cpptraj
+How to use:
+    1. fill a dir with hbond-avg.dat files from cpptraj (for mutated or replicate systems where hbonds will align)
+    2. Ensure the names of the hbond files are meaningful (system-1.dat, system-2.dat etc.)
+    3. Run this script with "combine-hbond-avg.py" (AFTER installing in your ~/bin) 
+    4. take the output .csv file for futher inspection elsewhere
+    
+Workflow of the script: 
+    Import the Acceptor, Donor, and Frac columns from hbond-avg.dat files (from cpptraj)
+    Merge Acceptor and Donor columns into a single field "hbond"
+    Sort hbond by string
+    Clean, reorder and rename the Frac column to ref the source file(s)
+    Combine n number of additional .dat files and merge until complete
+    Output a .csv file of the 'final' data frame for further analysis in excel
 
-Objective of this software
-Import the Acceptor, Donor, and Frac columns from hbond avg files
-Align and combine based on the hydrogen bond identity
-Clean and rename the columns to refer to the source files
-finally to output a .csv file for further analysis in excel
+Installation instructions for cedar users:
+	1. copy this file "combine-hbond-avg.py" to your ~/bin dir
+	2. bash: chmod +x ~/bin/combine-hbond-avg.py
+	3. done 
+	
+Modules for Cedar users:
+    module load StdEnv/2020 scipy-stack/2022a
 
 Author: Makay Murray 2022
 Lab: Wetmore @ uLeth
@@ -16,18 +31,18 @@ Lab: Wetmore @ uLeth
 import pandas as pd
 import os
 import glob
-
-df_final = None # initilize an empty df, this will be filled once in the next loop
-
-#Get all the DAT files in a folder
+#%% 
+df_final = None # initilize an empty df, this will be filled in the next loop
+#%%
+#Get all the .dat file names in current path
 path = os.getcwd()
 dat_files = glob.glob(os.path.join(path, "*.dat"))
-
+#%%
 # loop over the list of dat files
 for f in dat_files: 
    
     # Fill the data frame with the first dat file and adjust columns
-    if df_final is None:   # fill the final variable with the first .dat file
+    if df_final is None:
         df_final = pd.read_csv(f, delim_whitespace=True, usecols = ['#Acceptor', 'Donor', 'Frac'])
         df_final['hbond'] =  df_final["#Acceptor"].astype(str) + str("---") + df_final["Donor"].astype(str)
         df_final = df_final.sort_values(by=['hbond'])
@@ -43,8 +58,9 @@ for f in dat_files:
     df = df.reindex(columns=['hbond','Frac'])
     df = df.rename(columns = {"Frac":f}) #convert the Frac column header into the file name the data is from. 
     df_final = df_final.merge(df, how='left', on='hbond',) #final merge of the loop to append to the final DF
-
+#%%
 df_final.drop(df_final.columns[[1]], axis = 1, inplace = True)
 df_final.to_csv('final_hbond.csv', header=True)
 
 print('The Hbond Data has been combined! Please check final_hbond.csv for your data')
+#%%
